@@ -1755,6 +1755,7 @@
         <fullname>Sony PlayStation</fullname>
         <path>%ROMPATH%/psx</path>
         <extension>.bin .BIN .cbn .CBN .ccd .CCD .chd .CHD .cue .CUE .ecm .ECM .exe .EXE .img .IMG .iso .ISO .m3u .M3U .mdf .MDF .mds .MDS .minipsf .MINIPSF .pbp .PBP .psexe .PSEXE .psf .PSF .toc .TOC .z .Z .znx .ZNX .7z .7Z .zip .ZIP</extension>
+        <command label="GooseStation">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/goosestation_libretro.so %ROM%</command>
         <command label="Beetle PSX">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/mednafen_psx_libretro.so %ROM%</command>
         <command label="Beetle PSX HW">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/mednafen_psx_hw_libretro.so %ROM%</command>
         <command label="PCSX ReARMed">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/pcsx_rearmed_libretro.so %ROM%</command>
@@ -2146,6 +2147,7 @@
         <fullname>Nintendo Switch</fullname>
         <path>%ROMPATH%/switch</path>
         <extension>.nca .NCA .nro .NRO .nso .NSO .nsp .NSP .xci .XCI</extension>
+        <command label="Suyu (RetroArch)">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/suyu_libretro.so %ROM%</command>
         <command label="Yuzu (Standalone)">./Apps/Yuzu/Yuzu.AppImage -f -g $PWD/%ROM%</command>
         <command label="Eden (Standalone)">%EMULATOR_EDEN% -f -g $PWD/%ROM%</command>
         <command label="Ryujinx (Standalone)">./Apps/Ryujinx/ryujinx.AppImage %ROM%</command>
