@@ -88,7 +88,10 @@ redirect_to_centralized "$PCSX2_CONFIG_DIR/sstates"  "$DECKSTATION_ROOT/saves/pc
 redirect_to_centralized "$PCSX2_CONFIG_DIR/snaps"    "$DECKSTATION_ROOT/saves/pcsx2/snaps"
 redirect_to_centralized "$PCSX2_CONFIG_DIR/logs"     "$DECKSTATION_ROOT/logs/pcsx2"
 
-# 7. CONFIGS BASE + BIOS (auto-reparacion barata: solo copian lo que falte)
+# 7. CONFIGS BASE + BIOS + CORES (auto-reparacion barata: solo lo que falte)
+if [ -x "$DECKSTATION_ROOT/scripts/deckstation-cores.sh" ]; then
+    DECKSTATION_ROOT="$DECKSTATION_ROOT" "$DECKSTATION_ROOT/scripts/deckstation-cores.sh" 2>/dev/null || true
+fi
 if [ -x "$DECKSTATION_ROOT/scripts/deckstation-configs.sh" ]; then
     DECKSTATION_ROOT="$DECKSTATION_ROOT" "$DECKSTATION_ROOT/scripts/deckstation-configs.sh" 2>/dev/null || true
 fi

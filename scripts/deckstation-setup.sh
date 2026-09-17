@@ -1,7 +1,23 @@
 #!/bin/bash
-# deckstation-setup.sh
-# Descarga e instala emuladores para DeckStation ARM
+# ======================================================================
+# deckstation-setup.sh — Prepara DeckStation ARM
+# ======================================================================
+# Prepara el entorno portable de DeckStation:
+#   1. Estructura de directorios
+#   2. Assets de RetroArch (iconos del menu XMB, ~75 MB)
+#   3. Cores del sistema -> carpeta portable (p. ej. suyu-libretro)
+#   4. Wrappers lanzar.sh en cada emulador
+#   5. Configs base + BIOS
+#   6. Abre el Updater, que es quien instala/actualiza los emuladores
+#      (AppImages) desde updater/git.txt.
+#
 # Uso: deckstation-setup [--force]
+#   --force  Re-descarga tambien lo que ya existe (assets, etc.)
+#
+# NOTA: este script NO descarga emuladores por su cuenta. Antes lo intentaba
+# y bajaba el APK de ANDROID de RetroArch (roto en Linux); ahora esa tarea es
+# exclusiva del Updater, que es el que mantiene git.txt.
+# ======================================================================
 
 set -euo pipefail
 
@@ -9,21 +25,17 @@ set -euo pipefail
 # Configuración
 # ============================================================================
 
-# Detectar directorio raíz de DeckStation
 DECKSTATION_ROOT="${DECKSTATION_ROOT:-/opt/deckstation}"
 SCRIPTS_DIR="${DECKSTATION_ROOT}/scripts"
 LOG_DIR="${DECKSTATION_ROOT}/logs"
 APPS_DIR="${DECKSTATION_ROOT}/Apps"
-CONFIGS_DIR="${DECKSTATION_ROOT}/configs"
 
-# Colores
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-# Flags
 FORCE_DOWNLOAD=false
 
 # ============================================================================
@@ -56,37 +68,27 @@ log_error() {
 
 check_dependencies() {
     log "Verificando dependencias..."
-
     local missing=()
-
-    for cmd in python3 curl wget tar; do
-        if ! command -v "$cmd" &>/dev/null; then
-            missing+=("$cmd")
-        fi
+    for cmd in curl unzip; do
+        command -v "$cmd" &>/dev/null || missing+=("$cmd")
     done
-
     if [[ ${#missing[@]} -gt 0 ]]; then
         log_warn "Faltan dependencias: ${missing[*]}"
-        log "Intentando instalar con pacman..."
-
         if command -v pacman &>/dev/null; then
             sudo pacman -S --needed --noconfirm "${missing[@]}" || {
                 log_error "No se pudieron instalar las dependencias"
-                log "Instala manualmente: ${missing[*]}"
                 return 1
             }
         else
-            log_error "No se encontró pacman. Instala manualmente: ${missing[*]}"
+            log_error "Instala manualmente: ${missing[*]}"
             return 1
         fi
     fi
-
     log_ok "Dependencias verificadas"
 }
 
 ensure_directories() {
     log "Creando estructura de directorios..."
-
     local dirs=(
         "${APPS_DIR}"
         "${LOG_DIR}"
@@ -94,136 +96,86 @@ ensure_directories() {
         "${DECKSTATION_ROOT}/settings"
         "${DECKSTATION_ROOT}/Media"
     )
-
     for dir in "${dirs[@]}"; do
         mkdir -p "$dir"
     done
-
     log_ok "Directorios creados"
 }
 
-download_emulator() {
-    local name="$1"
-    local url="$2"
-    local dest="$3"
+# Localiza el .home portable de una app (misma logica que scripts/lanzar.sh):
+#   1) un *.home ya existente
+#   2) <AppImage>.home
+#   3) <subcarpeta>.AppImage.home (arboles extraidos, p.ej. RetroArch)
+find_app_home() {
+    local app="$1" dir home img sub base low
+    dir="$(find "${APPS_DIR}" -maxdepth 1 -type d -iname "$app" 2>/dev/null | head -1)"
+    [ -n "$dir" ] || return 1
 
-    if [[ -f "$dest" ]] && [[ "$FORCE_DOWNLOAD" != true ]]; then
-        log_ok "${name} ya existe, omitiendo"
+    home="$(find "$dir" -maxdepth 3 -type d -name "*.home" 2>/dev/null | head -1)"
+    [ -n "$home" ] && { printf '%s' "$home"; return 0; }
+
+    img="$(find "$dir" -maxdepth 3 -type f \( -iname "*.AppImage" -o -iname "*.appimage" \) 2>/dev/null | head -1)"
+    [ -n "$img" ] && { printf '%s' "${img}.home"; return 0; }
+
+    for sub in "$dir"/*/; do
+        [ -d "$sub" ] || continue
+        base="$(basename "$sub")"
+        low="$(printf '%s' "$base" | tr '[:upper:]' '[:lower:]')"
+        case "$low" in
+            app) continue ;;
+            "$(printf '%s' "$app" | tr '[:upper:]' '[:lower:]')"*)
+                printf '%s' "${sub%/}.AppImage.home"
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}
+
+# ============================================================================
+# Entorno portable
+# ============================================================================
+
+# Assets de RetroArch: iconos del menu XMB (ozone/xmb/glui...). ~75 MB.
+# Sin ellos, `menu_driver = "xmb"` se ve sin iconos.
+setup_retroarch_assets() {
+    local ra_home assets_dir url tmp
+    ra_home="$(find_app_home retroarch)" || {
+        log_warn "RetroArch no instalado todavia; se omiten los assets"
+        return 0
+    }
+    assets_dir="${ra_home}/.config/retroarch/assets"
+
+    if [ -d "${assets_dir}/xmb" ] && [ "$FORCE_DOWNLOAD" != true ]; then
+        log_ok "Assets de RetroArch ya instalados"
         return 0
     fi
 
-    log "Descargando ${name}..."
-
-    if curl -L --progress-bar -o "${dest}.tmp" "$url"; then
-        mv "${dest}.tmp" "$dest"
-        chmod +x "$dest"
-        log_ok "${name} descargado correctamente"
+    url="https://buildbot.libretro.com/assets/frontend/assets.zip"
+    tmp="${LOG_DIR}/assets.zip"
+    log "Descargando assets de RetroArch (~75 MB, iconos del menu)..."
+    if ! curl -L --progress-bar -o "$tmp" "$url"; then
+        rm -f "$tmp"
+        log_warn "No se pudieron descargar los assets: el menu XMB se vera sin iconos"
         return 0
+    fi
+
+    mkdir -p "$assets_dir"
+    if unzip -q -o "$tmp" -d "$assets_dir"; then
+        log_ok "Assets de RetroArch instalados"
     else
-        rm -f "${dest}.tmp"
-        log_error "Error descargando ${name}"
-        return 1
+        log_warn "No se pudieron descomprimir los assets"
     fi
+    rm -f "$tmp"
 }
 
-# ============================================================================
-# Setup de emuladores
-# ============================================================================
-
-setup_retroarch() {
-    local retroarch_dir="${APPS_DIR}/retroarch"
-    local retroarch_bin="${retroarch_dir}/retroarch"
-
-    if [[ -f "$retroarch_bin" ]] && [[ "$FORCE_DOWNLOAD" != true ]]; then
-        log_ok "RetroArch ya instalado"
-        return 0
+# Cores instalados como paquetes del sistema (p. ej. suyu-libretro) ->
+# carpeta portable de cores, para que ES-DE/RetroArch los vean.
+deploy_system_cores() {
+    if [ -x "${SCRIPTS_DIR}/deckstation-cores.sh" ]; then
+        log "Enlazando cores del sistema a la carpeta portable..."
+        "${SCRIPTS_DIR}/deckstation-cores.sh" || log_warn "Fallo al enlazar los cores del sistema"
     fi
-
-    mkdir -p "$retroarch_dir"
-
-    # Detectar arquitectura
-    local arch
-    arch=$(uname -m)
-
-    # URL de RetroArch para ARM
-    local base_url="https://buildbot.libretro.com/stable"
-    local retroarch_url=""
-
-    case "$arch" in
-        aarch64)
-            retroarch_url="${base_url}/1.19.1/android/arm64-v8a/RetroArch_ra32.apk"
-            ;;
-        armv7l|armhf)
-            retroarch_url="${base_url}/1.19.1/android/armeabi-v7a/RetroArch_ra32.apk"
-            ;;
-        *)
-            log_warn "Arquitectura ${arch} no soportada directamente"
-            log_warn "Intentando con paquete del sistema..."
-            if command -v pacman &>/dev/null; then
-                sudo pacman -S --needed --noconfirm retroarch
-                return $?
-            fi
-            return 1
-            ;;
-    esac
-
-    if [[ -n "$retroarch_url" ]]; then
-        log "Descargando RetroArch para ${arch}..."
-        curl -L --progress-bar -o "${retroarch_dir}/retroarch.apk" "$retroarch_url"
-
-        # El APK es un ZIP, extraer
-        if command -v unzip &>/dev/null; then
-            unzip -q -o "${retroarch_dir}/retroarch.apk" -d "${retroarch_dir}/"
-            # Buscar el binario
-            find "${retroarch_dir}" -name "retroarch" -type f -exec chmod +x {} \;
-        fi
-
-        log_ok "RetroArch instalado"
-    fi
-}
-
-setup_pcsx2() {
-    log "Verificando AetherSX2/PCSX2..."
-
-    local pcsx2_dir="${APPS_DIR}/pcsx2"
-    mkdir -p "$pcsx2_dir"
-
-    # Nota: AetherSX2 no tiene builds oficiales para Linux ARM
-    # Se puede compilar desde fuente o usar versiones alternativas
-    log_warn "AetherSX2/PCSX2 requiere compilación manual para ARM"
-    log "Ver docs/INSTALACION.md para instrucciones"
-}
-
-setup_dolphin() {
-    log "Verificando Dolphin..."
-
-    local dolphin_dir="${APPS_DIR}/dolphin"
-    mkdir -p "$dolphin_dir"
-
-    if command -v dolphin-emu &>/dev/null; then
-        ln -sf "$(which dolphin-emu)" "${dolphin_dir}/dolphin-emu"
-        log_ok "Dolphin encontrado en el sistema"
-        return 0
-    fi
-
-    if command -v pacman &>/dev/null; then
-        log "Dolphin no encontrado. Instalar con:"
-        echo "  sudo pacman -S dolphin-emu"
-    fi
-}
-
-setup_extra_cores() {
-    local cores_dir="${APPS_DIR}/retroarch/cores"
-
-    if [[ -d "$cores_dir" ]] && [[ "$(ls -A "$cores_dir" 2>/dev/null)" ]]; then
-        log_ok "Cores de RetroArch ya instalados"
-        return 0
-    fi
-
-    mkdir -p "$cores_dir"
-
-    log "Descargando cores adicionales de RetroArch..."
-    log_warn "Los cores se descargarán al lanzar RetroArch por primera vez"
 }
 
 # Despliega el wrapper portable lanzar.sh a cada carpeta de emulador que contenga
@@ -249,6 +201,43 @@ deploy_lanzar_sh() {
     done
 }
 
+# Configs base + BIOS (no destructivos: solo rellenan lo que falte).
+deploy_configs_and_bios() {
+    if [ -x "${SCRIPTS_DIR}/deckstation-configs.sh" ]; then
+        log "Desplegando configs base de DeckStation..."
+        "${SCRIPTS_DIR}/deckstation-configs.sh" || log_warn "Fallo al desplegar los configs base"
+    else
+        log_warn "No encuentro ${SCRIPTS_DIR}/deckstation-configs.sh; se omiten los configs base"
+    fi
+    if [ -x "${SCRIPTS_DIR}/deckstation-bios.sh" ]; then
+        log "Repartiendo BIOS del usuario (si hay)..."
+        "${SCRIPTS_DIR}/deckstation-bios.sh" || log_warn "Fallo al repartir las BIOS"
+    fi
+}
+
+# ============================================================================
+# Emuladores (los instala el Updater)
+# ============================================================================
+
+install_emulators() {
+    local launcher="${APPS_DIR}/Updater/launcher.sh"
+
+    if [ ! -x "$launcher" ]; then
+        log_warn "No encuentro el Updater (${launcher})"
+        log "Instala los emuladores desde ES-DE -> Updater."
+        return 0
+    fi
+
+    if [ -z "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ]; then
+        log "Los emuladores los instala el Updater."
+        log "Abrelo desde ES-DE (o ejecuta ${launcher} en una sesion grafica)."
+        return 0
+    fi
+
+    log "Abriendo el Updater para instalar/actualizar los emuladores..."
+    "$launcher" || log_warn "El Updater termino con un error"
+}
+
 # ============================================================================
 # Main
 # ============================================================================
@@ -260,7 +249,6 @@ main() {
     echo "=========================================="
     echo ""
 
-    # Parsear argumentos
     while [[ $# -gt 0 ]]; do
         case $1 in
             --force)
@@ -270,8 +258,12 @@ main() {
             --help|-h)
                 echo "Uso: deckstation-setup [--force]"
                 echo ""
+                echo "Prepara el entorno portable de DeckStation (assets, cores,"
+                echo "lanzar.sh, configs y BIOS) y abre el Updater para instalar"
+                echo "los emuladores."
+                echo ""
                 echo "Opciones:"
-                echo "  --force   Forzar re-descarga de emuladores"
+                echo "  --force   Re-descargar tambien lo que ya existe"
                 echo "  --help    Mostrar esta ayuda"
                 exit 0
                 ;;
@@ -282,41 +274,28 @@ main() {
         esac
     done
 
-    # Crear directorios
     ensure_directories
-
-    # Verificar dependencias
     check_dependencies || exit 1
 
-    # Setup de cada emulador
     echo ""
-    log "Iniciando setup de emuladores..."
+    log "Preparando el entorno portable..."
     echo ""
 
-    setup_retroarch
-    setup_pcsx2
-    setup_dolphin
-    setup_extra_cores
+    setup_retroarch_assets
+    deploy_system_cores
     deploy_lanzar_sh
+    deploy_configs_and_bios
 
-    # Configs base (ES-DE, RetroArch, DuckStation, ...): la configuracion
-    # "de fabrica" de DeckStation, para que una instalacion nueva quede
-    # reproducible. No destructivo: solo rellena lo que falte.
     echo ""
-    if [ -x "${SCRIPTS_DIR}/deckstation-configs.sh" ]; then
-        log "Desplegando configs base de DeckStation..."
-        "${SCRIPTS_DIR}/deckstation-configs.sh" || log_warn "Fallo al desplegar los configs base"
-    else
-        log_warn "No encuentro ${SCRIPTS_DIR}/deckstation-configs.sh; se omiten los configs base"
-    fi
+    log "Emuladores..."
+    install_emulators
 
-    # Resumen
     echo ""
     echo "=========================================="
     echo "  Setup completado!"
     echo "=========================================="
     echo ""
-    echo "Emuladores instalados en: ${APPS_DIR}"
+    echo "Emuladores en: ${APPS_DIR}"
     echo "Logs en: ${LOG_DIR}/setup.log"
     echo ""
     echo "Para lanzar:"
@@ -324,5 +303,4 @@ main() {
     echo ""
 }
 
-# Ejecutar
 main "$@"
