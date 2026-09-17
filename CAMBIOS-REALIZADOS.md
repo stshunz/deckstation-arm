@@ -168,3 +168,79 @@ El sistema `switch` de ES-DE ofrece como **primera opción** el core de libretro
 
 > Verificado en una AYN Odin 3 (aarch64, GCC 16.1): compila y el `.so` resultante carga
 > correctamente (165 librerías resueltas, símbolos libretro exportados).
+
+**Regresión corregida (17/09/2026):** el commit `c39d880` ("activar los 27 emuladores
+standalone") borró por error el `<command>` de Suyu del `es_systems.xml`. Restaurado.
+También se añadió **GooseStation** (core de PSX) como primera opción del sistema `psx`;
+el core ya estaba copiado pero ES-DE no lo conocía porque no había `<command>` que lo
+referenciase.
+
+**⚠️ Las claves de Switch van en `<system_dir>/suyu/keys/`.** El core las busca ahí
+(no en la raíz de `system/`). Sin ellas el cifrador AES queda sin inicializar y el core
+revienta con asserts en `core/crypto/aes_util.cpp` ("Failed to set IV on OpenSSL
+contexts"). Con `prod.keys` + `title.keys` en su sitio, carga y arranca.
+
+---
+
+## 8. Despliegue de la configuración base (`deckstation-configs.sh`)
+
+Antes `configs/` era **solo una copia de referencia**: el despliegue real lo hacía el
+Updater con un `payload/` de MediaFire (x86_64), así que en ARM había que copiar todo a
+mano y una instalación nueva quedaba sin configurar (ES-DE sin sistemas, RetroArch con la
+config de fábrica).
+
+- **`configs/deploy-manifest.txt`** — mapa `config → destino real`, con el token
+  `{HOME:NombreApp}` que resuelve al `.home` de cada emulador.
+- **`scripts/deckstation-configs.sh`** — aplica el manifiesto. **No destructivo**
+  (solo copia lo que falta; `--force` resetea, `--dry-run` simula). Resuelve el `.home`
+  con la misma lógica que `lanzar.sh` (existente → derivado del AppImage → árbol
+  extraído) y **crea los directorios que falten**, así que funciona en instalaciones
+  nuevas, antes de que el emulador se haya ejecutado nunca.
+- **Invocado por** `deckstation-setup.sh` (al instalar) y `deckstation-launcher.sh`
+  (en cada arranque, como auto-reparación barata: es no-op cuando ya está todo).
+- El PKGBUILD hace `chmod -R a+rX` en `configs/`: se construye como root y
+  `duckstation.ini`/`settings.ini` quedaban en modo 600, ilegibles para `deck`.
+
+## 9. BIOS y firmware (`deckstation-bios.sh`)
+
+Las BIOS tienen copyright: no se pueden incluir. Solución externa:
+
+- **`bios/`** con una subcarpeta por sistema (`psx`, `ps2`, `dreamcast`, `saturn`,
+  `segacd`, `pcecd`, `3do`, `neogeo`, `msx`, `switch`, `3ds`, `misc`).
+- **`bios/README.md`** — qué ficheros necesita cada sistema (con los nombres exactos que
+  esperan los emuladores) y qué sistemas no necesitan BIOS.
+- **`bios/deploy-bios.txt`** — manifiesto: PSX → `system/` de RetroArch **y**
+  `bios/` de DuckStation; Dreamcast → `system/dc/`; claves de Switch → `system/suyu/keys/`;
+  3DS → sysdata de Azahar; etc.
+- **`scripts/deckstation-bios.sh`** — reparte (reutiliza el motor de
+  `deckstation-configs.sh` vía `--from/--manifest/--label`). Se ejecuta también en cada
+  arranque desde el launcher.
+- Los ficheros reales **no se versionan** (`.gitignore`), solo README, manifiesto y
+  carpetas.
+
+## 10. RetroArch: driver de vídeo y tema
+
+- **`video_driver` `vulkan` → `glcore`.** El Vulkan libre (Turnip/freedreno) en
+  **Adreno 8xx / Gen8** (Odin 3, Adreno 830) relentiza la imagen; es un problema del
+  driver, no de RetroArch. `glcore` (OpenGL) es el workaround.
+- **`menu_driver` `ozone` → `xmb`** + **`xmb_theme = "flatux"`**, para que el menú use
+  iconos y no se vea "de serie".
+- **⚠️ Requiere los assets de RetroArch** en `<retroarch>/assets/xmb/<tema>`. No van en
+  git (82 MB): se bajan de `github.com/libretro/retroarch-assets` (carpetas `xmb/` y
+  `ozone/`). **Pendiente: automatizar su descarga en `deckstation-setup.sh`.**
+
+## 11. Gaps conocidos (pendientes)
+
+1. **Core de Suyu**: el paquete `suyu-libretro` existe en el centro
+   (`arcadematicas/pocknix-odin3-support`) pero **no está en
+   `devices/sm8750/packages.list`** ni instalado en la imagen. Hoy el `.so` viene de un
+   build manual. → Añadirlo a la imagen (o al payload de DeckStation) y copiarlo a la
+   carpeta portable de cores.
+2. **Core GooseStation**: compilado a mano, sin paquete ni entrada en `updater/git.txt`.
+   → Decidir cómo distribuirlo (ojo: su licencia es CC-BY-NC-ND y prohíbe redistribuir).
+3. **Assets XMB de RetroArch** (82 MB): no se descargan. → Añadir a
+   `deckstation-setup.sh`.
+4. **Vita3K**: no es AppImage (es un `.7z` extraído) y no tiene `.home`, así que ni es
+   portable ni se le despliegan configs. → Revisar.
+5. **PCSX2 / PPSSPP**: sin build ARM, sus entradas del manifiesto se omiten (best-effort).
+

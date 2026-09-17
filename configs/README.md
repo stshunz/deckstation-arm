@@ -3,15 +3,17 @@
 Configuraciones personalizadas importadas desde el proyecto DeckStation ARM
 (`/run/media/fransis/8TB/deckstation-arm/`) al repo portable deckstation-arm.
 
-> **Esto es una COPIA DE REFERENCIA, no la configuración activa.** El setup
-> (`deckstation-setup.sh`) **no despliega** esta carpeta: cada emulador usa la
-> configuración de su propio `.AppImage.home` (semi-portable, dentro de DeckStation).
-> Estas copias sirven para consultar cómo quedó cada config saneada y para restaurarla
-> a mano si hace falta. Ver `CAMBIOS-REALIZADOS.md`.
+> **Esta carpeta ES la configuración base de DeckStation.** El script
+> `scripts/deckstation-configs.sh` la despliega en el `.AppImage.home` de cada
+> emulador siguiendo `deploy-manifest.txt`, y lo invocan `deckstation-setup.sh`
+> (al instalar) y `deckstation-launcher.sh` (en cada arranque, como
+> auto-reparación). **No es destructivo**: solo copia lo que falte; `--force`
+> resetea a estos valores y `--dry-run` simula.
 >
-> El despliegue real lo hace el **Updater**: descarga un `payload/` desde MediaFire
-> (carpeta compartida `1ixylxeqkr0wo`) con los emuladores y sus `.AppImage.home` ya
-> configurados, y lo aplica dejando registro en `update/.installed/`.
+> Antes el despliegue real dependía de un `payload/` de MediaFire del Updater
+> (carpeta compartida `1ixylxeqkr0wo`, x86_64). Ese payload **ya no hace falta**:
+> con estos ficheros + el manifiesto, una instalación nueva queda configurada
+> sola (ES-DE con sus sistemas, RetroArch con la config saneada, etc.).
 
 ## Qué se copió y por qué
 
