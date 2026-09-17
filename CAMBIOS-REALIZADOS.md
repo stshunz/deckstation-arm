@@ -244,9 +244,20 @@ Las BIOS tienen copyright: no se pueden incluir. Solución externa:
   driver, no de RetroArch. `glcore` (OpenGL) es el workaround.
 - **`menu_driver` `ozone` → `xmb`** + **`xmb_theme = "flatux"`**, para que el menú use
   iconos y no se vea "de serie".
-- **⚠️ Requiere los assets de RetroArch** en `<retroarch>/assets/xmb/<tema>`. No van en
-  git (82 MB): se bajan de `github.com/libretro/retroarch-assets` (carpetas `xmb/` y
-  `ozone/`). **Pendiente: automatizar su descarga en `deckstation-setup.sh`.**
+- **Requiere los assets de RetroArch** en `<retroarch>/assets/xmb/<tema>`. No van en
+  git (82 MB): `deckstation-setup.sh` los baja solos del buildbot
+  (`buildbot.libretro.com/assets/frontend/assets.zip`, ~75 MB) a la carpeta portable de
+  assets.
+
+**⚠️ Core options ≠ Overrides.** Son dos sistemas distintos y es fácil confundirlos: si al
+guardar sale *"[Override] No hay nada que guardar. No se han guardado las
+personalizaciones"*, se está usando **Overrides** (Quick Menu → Overrides), que **no** guarda
+las *core options*. Las core options (idioma, resolución, docked…) se guardan en
+**`<retroarch>/config/<corename>/<corename>.opt`** (formato `clave = "valor"`) y se
+persisten con *Settings → Core → Manage Core Options → Save Core Options* (o al salir, con
+`config_save_on_exit = "true"`). **Se pueden escribir a mano** y RetroArch las lee al cargar
+el core — útil para dejar opciones puestas sin pelear con los menús. No es un problema de
+permisos: el árbol de RetroArch es `deck:deck` y escribible.
 
 ## 11. Setup y cores del sistema
 
