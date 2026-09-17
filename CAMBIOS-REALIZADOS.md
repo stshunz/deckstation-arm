@@ -33,6 +33,9 @@ o se han eliminado. El detalle fichero a fichero está en **`configs/README.md`*
 > payload trae los emuladores **con sus `.AppImage.home` ya configurados** — es el
 > mecanismo real de distribución de configuraciones, no `configs/`.
 > `update_dir = <raíz DeckStation>/update`.
+>
+> ⚠️ **En ARM está DESACTIVADO**: esa carpeta de MediaFire es la del proyecto **x86_64** y
+> su payload pisaría los emuladores ARM con binarios x86_64. Ver `updater/README.md`.
 
 | Emulador | Fichero | Qué se cambió |
 |---|---|---|
