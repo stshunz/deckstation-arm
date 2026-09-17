@@ -2143,6 +2143,7 @@
         <fullname>Nintendo Switch</fullname>
         <path>%ROMPATH%/switch</path>
         <extension>.nca .NCA .nro .NRO .nso .NSO .nsp .NSP .xci .XCI</extension>
+        <command label="Suyu (RetroArch)">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/suyu_libretro.so %ROM%</command>
         <command label="Yuzu (Standalone)">./Apps/Yuzu/Yuzu.AppImage -f -g $PWD/%ROM%</command>
         <command label="Eden (Standalone)">./Apps/Eden/Eden.AppImage -f -g $PWD/%ROM%</command>
         <command label="Ryujinx (Standalone)">./Apps/Ryujinx/ryujinx.AppImage %ROM%</command>
