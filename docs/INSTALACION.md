@@ -16,7 +16,7 @@
 
 ```bash
 # Clonar el repo
-git clone https://github.com/arcadematicas/deckstation-arm.git
+git clone https://github.com/stshunz/deckstation-arm.git
 cd deckstation-arm
 
 # Compilar el paquete
@@ -104,6 +104,43 @@ sudo pacman -S dolphin-emu
 # 2. Usar versiones alternativas
 # Ver: https://github.com/AetherSX2/... para más info
 ```
+
+## Configuración base y BIOS
+
+### Configuración base (automática)
+
+La carpeta `configs/` **es** la configuración de fábrica de DeckStation (ES-DE con sus
+sistemas y reglas, RetroArch saneado, DuckStation, Dolphin, Flycast, ...). Se despliega
+sola en el `.AppImage.home` de cada emulador:
+
+- `deckstation-setup.sh` la aplica al terminar de instalar.
+- `deckstation-launcher.sh` la reaplica en cada arranque (auto-reparación: es no-op
+  cuando ya está todo).
+
+A mano:
+
+```bash
+deckstation-configs.sh            # despliega lo que falte (no destructivo)
+deckstation-configs.sh --dry-run  # ver qué haría, sin tocar nada
+deckstation-configs.sh --force    # resetear a los valores de fábrica
+```
+
+El mapa de qué config va a dónde está en `configs/deploy-manifest.txt`.
+
+### BIOS y firmware
+
+Las BIOS tienen copyright: DeckStation **no las incluye ni las descarga**. Deja las tuyas
+(extraídas de tus propias consolas) en `/opt/deckstation/bios/<sistema>/` — ver
+`bios/README.md` para saber qué fichero necesita cada sistema — y se reparten solas a
+donde cada emulador las espera:
+
+```bash
+deckstation-bios.sh            # reparte lo que falte (no destructivo)
+deckstation-bios.sh --dry-run  # ver qué haría
+```
+
+También se ejecuta en cada arranque desde el launcher, así que basta con dejar los
+ficheros y abrir DeckStation. El mapa está en `bios/deploy-bios.txt`.
 
 ## Uso básico
 
