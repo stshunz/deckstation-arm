@@ -142,3 +142,29 @@ Portado a aarch64 desde la versión x86_64. Vive en `updater/` y se instala en
   config a su `.AppImage.home` tras descargar el emulador), o (c) eliminarlo si se
   considera ruido. Además, `deckstation-setup.sh` declara `CONFIGS_DIR` y **no lo usa**
   (variable muerta): limpiar si se opta por (a) o (c).
+
+---
+
+## 7. Core de Suyu para Nintendo Switch (RetroArch)
+
+El sistema `switch` de ES-DE ofrece como **primera opción** el core de libretro de **Suyu**
+(fork de Yuzu), antes que los standalone (Yuzu, Eden, Ryujinx, Citron):
+
+```xml
+<command label="Suyu (RetroArch)">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/suyu_libretro.so %ROM%</command>
+```
+
+- El core está en el código de Suyu: `src/libretro_core/`
+  (`github.com/suyu-emu/suyu-v0.0.4` — el mirror oficial tras el DMCA de Nintendo).
+- Se compila con `-DSUYU_BUILD_LIBRETRO_CORE=ON -DENABLE_QT=OFF`.
+- **⚠️ No hay build aarch64 publicado** (el release solo trae `linux-x64`): hay que compilarlo.
+  En aarch64 el emulador ejecuta el código ARM de la Switch **de forma nativa, sin traducción**,
+  así que rinde mejor que en x86_64.
+- **⚠️ Con GCC 16** hace falta `-DCMAKE_CXX_FLAGS="-Wno-maybe-uninitialized"`: da un falso
+  positivo en `cheat_engine.cpp:221` que, con `-Werror`, aborta el build.
+- Metadatos del core: `configs/retroarch/cores/suyu_libretro.info`.
+- El core va en el directorio portable de cores de RetroArch
+  (el mismo que resuelve `%CORE_RETROARCH%`).
+
+> Verificado en una AYN Odin 3 (aarch64, GCC 16.1): compila y el `.so` resultante carga
+> correctamente (165 librerías resueltas, símbolos libretro exportados).
