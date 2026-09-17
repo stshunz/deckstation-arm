@@ -652,7 +652,7 @@
 
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/redream/redream</entry>
+            <entry>./Apps/Redream/redream</entry>
 
         </rule>
     </emulator>
@@ -931,7 +931,7 @@
             <entry>Shadps4</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/shadPS4/Shadps4*.AppImage</entry>
+            <entry>./Apps/ShadPS4/Shadps4*.AppImage</entry>
 
         </rule>
     </emulator>
