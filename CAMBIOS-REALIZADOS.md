@@ -15,6 +15,18 @@ Muchas configs venían con rutas del equipo donde se configuraron por primera ve
 (`/home/deck/...`, `/run/media/...`, `C:/users/...`). Se han convertido a relativas
 o se han eliminado. El detalle fichero a fichero está en **`configs/README.md`**.
 
+> **IMPORTANTE — qué es `configs/` y qué no**
+> `configs/` es una **copia de referencia** (un snapshot versionado) de las configuraciones
+> que se dejaron saneadas. **NO se despliega automáticamente**: el setup
+> (`deckstation-setup.sh`) solo despliega los wrappers `lanzar.sh`
+> (`deploy_lanzar_sh`); no hay ninguna función que copie `configs/` a los
+> `.AppImage.home`. Cada emulador usa la configuración que tiene en su propio
+> `.AppImage.home` (semi-portable: vive dentro de DeckStation, no en el `$HOME`).
+>
+> Sirve por tanto para **consultar y restaurar**: si un emulador queda mal
+> configurado, aquí está la versión conocida-buena. Para aplicarla hay que copiarla a
+> mano a su `.AppImage.home`.
+
 | Emulador | Fichero | Qué se cambió |
 |---|---|---|
 | **PPSSPP** | `ppsspp/ppsspp.ini` | `CurrentDirectory` → `./` (antes absoluta al equipo del autor) |
@@ -115,3 +127,8 @@ Portado a aarch64 desde la versión x86_64. Vive en `updater/` y se instala en
   ni en los AppImage.
 - Para añadir un emulador nuevo: crear su `lanzar.sh`, su config saneada en `configs/`
   y documentarlo en `configs/README.md`.
+- **Pendiente/decidir**: `configs/` es hoy solo referencia. Opciones: (a) dejarlo como
+  snapshot documentado, (b) hacer que el setup lo despliegue de verdad (copiar cada
+  config a su `.AppImage.home` tras descargar el emulador), o (c) eliminarlo si se
+  considera ruido. Además, `deckstation-setup.sh` declara `CONFIGS_DIR` y **no lo usa**
+  (variable muerta): limpiar si se opta por (a) o (c).

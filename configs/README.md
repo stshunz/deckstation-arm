@@ -3,6 +3,12 @@
 Configuraciones personalizadas importadas desde el proyecto DeckStation ARM
 (`/run/media/fransis/8TB/deckstation-arm/`) al repo portable deckstation-arm.
 
+> **Esto es una COPIA DE REFERENCIA, no la configuración activa.** El setup
+> (`deckstation-setup.sh`) **no despliega** esta carpeta: cada emulador usa la
+> configuración de su propio `.AppImage.home` (semi-portable, dentro de DeckStation).
+> Estas copias sirven para consultar cómo quedó cada config saneada y para restaurarla
+> a mano si hace falta. Ver `CAMBIOS-REALIZADOS.md`.
+
 ## Qué se copió y por qué
 
 | Emulador | Archivo(s) | Origen | Notas |
