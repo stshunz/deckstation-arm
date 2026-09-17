@@ -180,6 +180,25 @@ referenciase.
 revienta con asserts en `core/crypto/aes_util.cpp` ("Failed to set IV on OpenSSL
 contexts"). Con `prod.keys` + `title.keys` en su sitio, carga y arranca.
 
+**🌐 Idioma (parche propio).** El core de serie **no expone opción de idioma** y **no lee
+ningún fichero de config** (no usa `Config`; el `qt-config.ini` es del frontend Qt, que en
+el core no existe) → `language_index` se quedaba en su default
+(`Settings::Language::EnglishAmerican`) y **todos los juegos salían en inglés**.
+
+`packages/suyu-libretro/suyu-language.patch` (solo `retro_core.cpp`, ~25 líneas) añade la
+core option **`suyu_language`** y la aplica donde el core ya aplica las demás (*"Apply core
+options before loading the game"*):
+
+> RetroArch → **Opciones del core → Suyu → Console Language → Spanish**
+
+Valores: `EnglishAmerican` (default), `Spanish`, `SpanishLatin`, `French`, `German`,
+`Italian`, `Japanese`, `Korean`, `Dutch`, `Portuguese`, `Russian`, `ChineseSimplified`,
+`ChineseTraditional`, `Polish`, `Thai`. En el enum de Suyu, `Spanish` = índice 5.
+
+El rebuild es **incremental** (un fichero + link ≈ 20 s) porque el parche solo toca
+`retro_core.cpp` y los idiomas se mapean por string (sin tocar `settings_enums.h`).
+
+
 ---
 
 ## 8. Despliegue de la configuración base (`deckstation-configs.sh`)
