@@ -1,16 +1,20 @@
 #!/bin/bash
 # ======================================================================
-# deckstation-configs.sh — Configs base de DeckStation
+# deckstation-configs.sh — Despliegue de ficheros base de DeckStation
 # ======================================================================
-# Despliega la carpeta configs/ (la configuracion "de fabrica" de
-# DeckStation) en los .AppImage.home de cada emulador, de forma que una
-# instalacion nueva quede reproducible sin depender de un payload externo.
+# Aplica un manifiesto que mapea ficheros de una carpeta de origen a los
+# destinos reales dentro de DeckStation (los .AppImage.home de cada
+# emulador). Se usa para dos cosas:
+#
+#   - configs/  -> la configuracion "de fabrica" (por defecto)
+#   - bios/     -> las BIOS del usuario (deckstation-bios.sh)
 #
 # NO es destructivo: por defecto solo copia lo que FALTA (respeta lo que
-# el usuario haya cambiado). Con --force resetea a los valores de fabrica.
+# el usuario haya cambiado). Con --force resetea a los valores de origen.
 #
 # Uso:
 #   deckstation-configs.sh [--force] [--dry-run]
+#                          [--from DIR] [--manifest FILE]
 #
 # Lo llama deckstation-setup.sh (tras instalar emuladores) y el launcher
 # (auto-reparacion barata: si ya esta todo, no hace nada).
@@ -19,22 +23,28 @@ set -u
 
 SELF="$(readlink -f "${BASH_SOURCE[0]}")"
 DECKSTATION_ROOT="${DECKSTATION_ROOT:-$(cd "$(dirname "$SELF")/.." && pwd)}"
-CONFIGS_DIR="${DECKSTATION_ROOT}/configs"
-MANIFEST="${CONFIGS_DIR}/deploy-manifest.txt"
+SRC_DIR="${DECKSTATION_ROOT}/configs"
+MANIFEST="${SRC_DIR}/deploy-manifest.txt"
 APPS_DIR="${DECKSTATION_ROOT}/Apps"
 
 FORCE=0
 DRY=0
-for a in "$@"; do
-    case "$a" in
-        --force)   FORCE=1 ;;
-        --dry-run) DRY=1 ;;
-        -h|--help) sed -n '2,17p' "$SELF"; exit 0 ;;
+LABEL="configs"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --force)    FORCE=1 ;;
+        --dry-run)  DRY=1 ;;
+        --from)     SRC_DIR="$2"; MANIFEST="$2/deploy-manifest.txt"; shift ;;
+        --manifest) MANIFEST="$2"; shift ;;
+        --label)    LABEL="$2"; shift ;;
+        -h|--help)  sed -n '2,20p' "$SELF"; exit 0 ;;
+        *)          echo "Opcion desconocida: $1" >&2; exit 1 ;;
     esac
+    shift
 done
 
-log()  { echo "  [configs] $*"; }
-warn() { echo "  [configs] AVISO: $*" >&2; }
+log()  { echo "  [$LABEL] $*"; }
+warn() { echo "  [$LABEL] AVISO: $*" >&2; }
 trim() { local s="$1"; s="${s#"${s%%[![:space:]]*}"}"; s="${s%"${s##*[![:space:]]}"}"; printf '%s' "$s"; }
 
 deployed=0
@@ -173,7 +183,7 @@ while IFS='|' read -r src dst policy || [ -n "${src:-}" ]; do
         *)  target="$DECKSTATION_ROOT/$dst" ;;
     esac
 
-    copy_one "$CONFIGS_DIR/$src" "$target" "$policy"
+    copy_one "$SRC_DIR/$src" "$target" "$policy"
 done < "$MANIFEST"
 
 if [ "$DRY" = 1 ]; then

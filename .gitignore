@@ -57,3 +57,7 @@ updater/__pycache__/
 updater/github_token.txt
 __pycache__/
 *.pyc
+
+# BIOS/firmware del usuario (copyright): solo se versionan README y manifiesto
+bios/*/*
+!bios/*/.gitkeep
