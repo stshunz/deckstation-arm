@@ -54,7 +54,7 @@
             <entry>amiberry</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/Amiberry/Amiberry.AppImage</entry>
+            <entry>./Apps/Amiberry/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -65,7 +65,7 @@
             <entry>dev.ares.ares</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/ares/ares.AppImage</entry>
+            <entry>./Apps/ares/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -126,6 +126,16 @@
         </rule>
         <rule type="staticpath">
             <entry>./Apps/Cemu/lanzar.sh</entry>
+
+        </rule>
+    </emulator>
+    <emulator name="CLOWNMDEMU">
+        <!-- Sega Mega CD emulator ClownMDEmu -->
+        <rule type="systempath">
+            <entry>clownmdemu</entry>
+        </rule>
+        <rule type="staticpath">
+            <entry>./Apps/ClownMDEmu/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -215,6 +225,7 @@
             <entry>com.dosbox_x.DOSBox-X</entry>
         </rule>
         <rule type="staticpath">
+            <entry>./Apps/DOSBox-X/lanzar.sh</entry>
             <entry>/var/lib/flatpak/exports/bin/com.dosbox_x.DOSBox-X</entry>
             <entry>~/.local/share/flatpak/exports/bin/com.dosbox_x.DOSBox-X</entry>
         </rule>
@@ -456,7 +467,7 @@
             <entry>net.kuribo64.melonDS</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/MelonDS/melonDS.AppImage</entry>
+            <entry>./Apps/MelonDS/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -478,7 +489,7 @@
             <entry>io.mgba.mGBA</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/mGBA/mGBA-0.10.5-appimage-arm64.appimage</entry>
+            <entry>./Apps/mGBA/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -560,6 +571,16 @@
         <rule type="staticpath">
             <entry>/var/lib/flatpak/exports/bin/net.pcsx2.PCSX2</entry>
             <entry>~/.local/share/flatpak/exports/bin/net.pcsx2.PCSX2</entry>
+        </rule>
+    </emulator>
+    <emulator name="PCSX-REDUX">
+        <!-- Sony PlayStation 1 emulator PCSX-Redux -->
+        <rule type="systempath">
+            <entry>pcsx-redux</entry>
+        </rule>
+        <rule type="staticpath">
+            <entry>./Apps/PCSX-Redux/lanzar.sh</entry>
+
         </rule>
     </emulator>
     <emulator name="PICO-8">
@@ -718,7 +739,7 @@
             <entry>org.scummvm.ScummVM</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/Scummvm/lanzar.sh</entry>
+            <entry>./Apps/ScummVM/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -775,6 +796,7 @@
             <entry>SkyEmu</entry>
         </rule>
         <rule type="staticpath">
+            <entry>./Apps/SkyEmu/lanzar.sh</entry>
             <entry>~/Applications/SkyEmu/SkyEmu</entry>
             <entry>~/.local/share/applications/SkyEmu/SkyEmu</entry>
             <entry>~/.local/bin/SkyEmu/SkyEmu</entry>
@@ -920,7 +942,7 @@
             <entry>Vita3K</entry>
         </rule>
         <rule type="staticpath">
-            <entry>/Apps/Vita3K/Vita3K*.AppImage</entry>
+            <entry>./Apps/Vita3K/lanzar.sh</entry>
 
         </rule>
     </emulator>
@@ -998,7 +1020,7 @@
             <entry>ymir</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/ymir/lanzar.sh</entry>
+            <entry>./Apps/Ymir/lanzar.sh</entry>
         </rule>
     </emulator>
     <emulator name="ZESARUX">
@@ -1045,7 +1067,7 @@
             <entry>bigpemu</entry>
         </rule>
         <rule type="staticpath">
-            <entry>./Apps/bigpemu/lanzar.sh</entry>
+            <entry>./Apps/BigPEmu/lanzar.sh</entry>
         </rule>
     </emulator>
     <emulator name="EDEN">
