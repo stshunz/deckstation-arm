@@ -27,6 +27,13 @@ post_install() {
     echo ""
     echo "Documentación: /opt/deckstation/docs/"
     echo "=========================================="
+
+    # El Updater (Apps/Updater) escribe su cache y settings.conf como el usuario
+    # deck. pacman los instala root:root, asi que hay que cederlos o el updater
+    # no puede guardar nada.
+    if [ -d /opt/deckstation/Apps/Updater ]; then
+        chown -R deck:deck /opt/deckstation/Apps/Updater 2>/dev/null || true
+    fi
 }
 
 post_upgrade() {
@@ -37,7 +44,12 @@ post_upgrade() {
     echo ""
     echo "Para actualizar emuladores:"
     echo "  deckstation-update"
+    echo "  (o el Updater con interfaz: /opt/deckstation/Apps/Updater/launcher.sh)"
     echo ""
+
+    if [ -d /opt/deckstation/Apps/Updater ]; then
+        chown -R deck:deck /opt/deckstation/Apps/Updater 2>/dev/null || true
+    fi
 }
 
 pre_remove() {
