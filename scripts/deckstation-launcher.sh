@@ -88,10 +88,15 @@ redirect_to_centralized "$PCSX2_CONFIG_DIR/sstates"  "$DECKSTATION_ROOT/saves/pc
 redirect_to_centralized "$PCSX2_CONFIG_DIR/snaps"    "$DECKSTATION_ROOT/saves/pcsx2/snaps"
 redirect_to_centralized "$PCSX2_CONFIG_DIR/logs"     "$DECKSTATION_ROOT/logs/pcsx2"
 
+# 7. CONFIGS BASE (auto-reparacion barata: solo copia lo que falte)
+if [ -x "$DECKSTATION_ROOT/scripts/deckstation-configs.sh" ]; then
+    DECKSTATION_ROOT="$DECKSTATION_ROOT" "$DECKSTATION_ROOT/scripts/deckstation-configs.sh" 2>/dev/null || true
+fi
+
 echo ""
 echo "=============================================="
 echo "  ✅ Entorno listo. Lanzando DeckStation..."
 echo "=============================================="
 
-# 7. LANZAR ES-DE (el AppImage original)
+# 8. LANZAR ES-DE (el AppImage original)
 exec "$DECKSTATION_ROOT/DeckStation.AppImage" "$@"

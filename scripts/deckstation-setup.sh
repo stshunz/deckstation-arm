@@ -299,6 +299,17 @@ main() {
     setup_extra_cores
     deploy_lanzar_sh
 
+    # Configs base (ES-DE, RetroArch, DuckStation, ...): la configuracion
+    # "de fabrica" de DeckStation, para que una instalacion nueva quede
+    # reproducible. No destructivo: solo rellena lo que falte.
+    echo ""
+    if [ -x "${SCRIPTS_DIR}/deckstation-configs.sh" ]; then
+        log "Desplegando configs base de DeckStation..."
+        "${SCRIPTS_DIR}/deckstation-configs.sh" || log_warn "Fallo al desplegar los configs base"
+    else
+        log_warn "No encuentro ${SCRIPTS_DIR}/deckstation-configs.sh; se omiten los configs base"
+    fi
+
     # Resumen
     echo ""
     echo "=========================================="
