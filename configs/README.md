@@ -8,6 +8,10 @@ Configuraciones personalizadas importadas desde el proyecto DeckStation ARM
 > configuración de su propio `.AppImage.home` (semi-portable, dentro de DeckStation).
 > Estas copias sirven para consultar cómo quedó cada config saneada y para restaurarla
 > a mano si hace falta. Ver `CAMBIOS-REALIZADOS.md`.
+>
+> El despliegue real lo hace el **Updater**: descarga un `payload/` desde MediaFire
+> (carpeta compartida `1ixylxeqkr0wo`) con los emuladores y sus `.AppImage.home` ya
+> configurados, y lo aplica dejando registro en `update/.installed/`.
 
 ## Qué se copió y por qué
 

@@ -26,6 +26,13 @@ o se han eliminado. El detalle fichero a fichero está en **`configs/README.md`*
 > Sirve por tanto para **consultar y restaurar**: si un emulador queda mal
 > configurado, aquí está la versión conocida-buena. Para aplicarla hay que copiarla a
 > mano a su `.AppImage.home`.
+>
+> **Cómo se despliega de verdad**: el **Updater** (`Apps/Updater/`) tiene un
+> auto-actualizador de DeckStation que descarga un `payload/` desde una carpeta de
+> **MediaFire** (`update/`, con `.installed/` como registro de lo ya aplicado). Ese
+> payload trae los emuladores **con sus `.AppImage.home` ya configurados** — es el
+> mecanismo real de distribución de configuraciones, no `configs/`.
+> `update_dir = <raíz DeckStation>/update`.
 
 | Emulador | Fichero | Qué se cambió |
 |---|---|---|
