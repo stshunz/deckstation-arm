@@ -229,18 +229,41 @@ Las BIOS tienen copyright: no se pueden incluir. Solución externa:
   git (82 MB): se bajan de `github.com/libretro/retroarch-assets` (carpetas `xmb/` y
   `ozone/`). **Pendiente: automatizar su descarga en `deckstation-setup.sh`.**
 
-## 11. Gaps conocidos (pendientes)
+## 11. Setup y cores del sistema
 
-1. **Core de Suyu**: el paquete `suyu-libretro` existe en el centro
-   (`arcadematicas/pocknix-odin3-support`) pero **no está en
-   `devices/sm8750/packages.list`** ni instalado en la imagen. Hoy el `.so` viene de un
-   build manual. → Añadirlo a la imagen (o al payload de DeckStation) y copiarlo a la
-   carpeta portable de cores.
+### `deckstation-setup.sh` — ya no baja el RetroArch de Android
+Descargaba `RetroArch_ra32.apk` (binario **Android** 1.19.1) y lo descomprimía en
+`Apps/RetroArch/`: en una instalación limpia eso **rompe RetroArch**, y es justo el script
+que ejecuta Pocknix Tools. Ahora el setup prepara el entorno portable y deja los
+emuladores al **Updater** (el que mantiene `updater/git.txt`):
+
+1. `setup_retroarch_assets` — baja `assets.zip` del buildbot (~75 MB: iconos del menú XMB).
+2. `deploy_system_cores` — llama a `deckstation-cores.sh`.
+3. `deploy_lanzar_sh` — wrappers portables por emulador.
+4. `deploy_configs_and_bios` — configs base + BIOS.
+5. `install_emulators` — abre el Updater (o indica cómo, si no hay display).
+
+### `deckstation-cores.sh` — cores empaquetados → carpeta portable
+Los paquetes de Pocknix instalan sus cores en las rutas estándar
+(`/usr/lib/libretro/*.so`, `/usr/share/libretro/info/*.info`), pero RetroArch de
+DeckStation es **portable** y busca en `<retroarch home>/.config/retroarch/cores/`. El
+script **enlaza** (symlink) lo que haya en las rutas estándar dentro de la carpeta
+portable, así cualquier core que empaquetemos aparece en ES-DE solo. No destructivo.
+Lo llaman el setup y el launcher.
+
+## 12. Gaps conocidos (pendientes)
+
+1. **Core de Suyu en la imagen**: el paquete `suyu-libretro` ya está en el árbol y
+   `build-image.sh` lo instala como **opcional** (`for oe in suyu-libretro`, con
+   warn-on-fail) + `deckstation-cores.sh` lo enlaza a la carpeta portable. **Ojo**: se
+   compila desde fuente (submódulos + cmake) → build pesado; si falla, la imagen sale sin
+   el core de Switch.
 2. **Core GooseStation**: compilado a mano, sin paquete ni entrada en `updater/git.txt`.
-   → Decidir cómo distribuirlo (ojo: su licencia es CC-BY-NC-ND y prohíbe redistribuir).
-3. **Assets XMB de RetroArch** (82 MB): no se descargan. → Añadir a
-   `deckstation-setup.sh`.
-4. **Vita3K**: no es AppImage (es un `.7z` extraído) y no tiene `.home`, así que ni es
+   → Decidir cómo distribuirlo (su licencia es CC-BY-NC-ND y prohíbe redistribuir).
+3. **Vita3K**: no es AppImage (es un `.7z` extraído) y no tiene `.home`, así que ni es
    portable ni se le despliegan configs. → Revisar.
-5. **PCSX2 / PPSSPP**: sin build ARM, sus entradas del manifiesto se omiten (best-effort).
+4. **PCSX2 / PPSSPP**: sin build ARM, sus entradas del manifiesto se omiten (best-effort).
+5. **`setup_arm64_apps.py`**: headless pero con lista de repos hardcodeada (no lee
+   `git.txt`) y sin conectar al flujo. → Unificar con el Updater o retirarlo.
+
 
