@@ -251,7 +251,32 @@ script **enlaza** (symlink) lo que haya en las rutas estándar dentro de la carp
 portable, así cualquier core que empaquetemos aparece en ES-DE solo. No destructivo.
 Lo llaman el setup y el launcher.
 
-## 12. Gaps conocidos (pendientes)
+## 12. DeckStation en el modo juego de Steam
+
+Para poder **entrar a DeckStation desde Game Mode** hay que meter un acceso no-Steam en
+`shortcuts.vdf`. El mecanismo ya existía en Pocknix: `pocknix-steam` llama a
+**`pocknix-steam-sync` justo antes de arrancar Steam** — el único momento seguro, porque
+Steam reescribe `shortcuts.vdf` al salir.
+
+**El script estaba muerto en esta imagen**: era de la capa de emulación de upstream
+(buscaba `~/ES-DE/gamelists` y `/usr/bin/pocknix-play`), que **no instalamos** — no
+encontraba nada y el tile nunca aparecía. Ahora apunta a DeckStation:
+
+- Emite **`DeckStation` → `/usr/bin/deckstation`**, con `StartDir=/opt/deckstation` y el
+  icono `DeckStation.png` si existe.
+- **Idempotente**: marca `DevkitGameID="pocknix"` y cada pasada reemplaza **solo ese
+  subconjunto**, así que los accesos del usuario sobreviven.
+- Los accesos **por juego** (favoritos) están implementados pero **inactivos**: necesitan
+  un `/usr/bin/deckstation-play` que aún no existe (haría falta resolver el emulador de
+  cada sistema desde `es_systems.xml`).
+
+**⚠️ Y hacía falta un fix previo**: el launcher de DeckStation **no fijaba
+`SDL_VIDEODRIVER`**, y ES-DE lanzado desde gamescope se quedaba en **negro** (SDL
+"Device or resource busy" si hereda el driver equivocado). Ahora el launcher lo fija al
+compositor disponible (wayland o x11), igual que `lanzar.sh` con los emuladores. **Sin
+este fix, el tile arrancaría a negro.**
+
+## 13. Gaps conocidos (pendientes)
 
 1. **Core de Suyu en la imagen**: el paquete `suyu-libretro` ya está en el árbol y
    `build-image.sh` lo instala como **opcional** (`for oe in suyu-libretro`, con
