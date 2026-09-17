@@ -8,6 +8,17 @@
 
 ---
 
+## Documentación
+
+- **`CAMBIOS-REALIZADOS.md`** — registro de los cambios de portabilidad y saneado
+  (rutas, saves/logs centralizados, Updater). Equivale al `.CAMBIOS_REALIZADOS.md`
+  de la versión x86_64.
+- **`configs/README.md`** — detalle fichero a fichero de cada configuración saneada.
+- **`updater/README.md`** — el actualizador de AppImages.
+- **`docs/INSTALACION.md`** — instalación.
+
+---
+
 ## ¿Qué es?
 
 DeckStation ARM es un sistema de emulación portable que transforma cualquier
