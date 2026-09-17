@@ -253,7 +253,7 @@
         <extension>.abs .ABS .bin .BIN .cdi .CDI .cof .COF .cue .CUE .j64 .J64 .jag .JAG .prg .PRG .rom .ROM .7z .7Z .zip .ZIP</extension>
         <command label="Virtual Jaguar">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/virtualjaguar_libretro.so %ROM%</command>
         <command label="MAME (Standalone)">%EMULATOR_MAME% -rompath %GAMEDIR%\;%ROMPATH%/atarijaguar jaguar -cart %ROM%</command>
-        <command label="BigPEmu">./Apps/bigpemu/BigPEmu.AppImage %ROM%</command>
+        <command label="BigPEmu (Standalone)">%EMULATOR_BIGPEMU% %ROM%</command>
         <platform>atarijaguar</platform>
         <theme>atarijaguar</theme>
 
@@ -263,7 +263,7 @@
         <fullname>Atari Jaguar CD</fullname>
         <path>%ROMPATH%/atarijaguarcd</path>
         <extension>.abs .ABS .bin .BIN .cdi .CDI .cof .COF .cue .CUE .j64 .J64 .jag .JAG .prg .PRG .rom .ROM .7z .7Z .zip .ZIP .bigpimg</extension>
-        <command label="BigPEmu">./Apps/bigpemu/BigPEmu.AppImage %ROM%</command>
+        <command label="BigPEmu (Standalone)">%EMULATOR_BIGPEMU% %ROM%</command>
         <platform>atarijaguarcd</platform>
         <theme>atarijaguarcd</theme>
 
@@ -1167,7 +1167,7 @@
         <fullname>Sega Model 3</fullname>
         <path>%ROMPATH%/model3</path>
         <extension>.7z .7Z .zip .ZIP</extension>
-        <command label="Supermodel (Standalone)">/bin/bash ./Apps/Supermodel/supermodel.sh ../../../../../%ROM%</command>
+        <command label="Supermodel (Standalone)">%EMULATOR_SUPERMODEL% ../../../../../%ROM%</command>
         <command label="Supermodel">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/supermodel_libretro.so %ROM%</command>
         <platform>arcade</platform>
         <theme>model3</theme>
@@ -1263,7 +1263,7 @@
         <command label="Shortcut or script">%ENABLESHORTCUTS% %EMULATOR_OS-SHELL% %ROM%</command>
 
         <command label="Lime3ds (Standalone)">./Apps/lime3ds/lime3ds.AppImage -f %ROM%</command>
-        <command label="Azahar (Standalone)">./Apps/Azahar/azahar.AppImage -f %ROM%</command>
+        <command label="Azahar (Standalone)">%EMULATOR_AZAHAR% -f %ROM%</command>
         <command label="Azahar">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/azahar_libretro.so %ROM%</command>
         <platform>n3ds</platform>
         <theme>n3ds</theme>
@@ -1746,7 +1746,7 @@
         <fullname>Sony PlayStation Vita</fullname>
         <path>%ROMPATH%/psvita</path>
         <extension>.psvita</extension>
-        <command label="Vita3K (Standalone)">"./Apps/Vita3K/Vita3K-x86_64.AppImage" --fullscreen -r %INJECT%=%BASENAME%.psvita</command>
+        <command label="Vita3K (Standalone)">%EMULATOR_VITA3K% --fullscreen -r %INJECT%=%BASENAME%.psvita</command>
         <platform>psvita</platform>
         <theme>psvita</theme>
     </system>
@@ -1760,7 +1760,8 @@
         <command label="PCSX ReARMed">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/pcsx_rearmed_libretro.so %ROM%</command>
         <command label="SwanStation">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/swanstation_libretro.so %ROM%</command>
         <command label="DuckStation (Standalone)">%EMULATOR_DUCKSTATION% -batch %ROM%</command>
-        <command label="Mednafen (Standalone)">%EMULATOR_MEDNAFEN% -force_module psx %ROM%</command>
+        <command label="PCSX-Redux (Standalone)">%EMULATOR_PCSX-REDUX% %ROM%</command>
+    <command label="Mednafen (Standalone)">%EMULATOR_MEDNAFEN% -force_module psx %ROM%</command>
         <platform>psx</platform>
         <theme>psx</theme>
     <command label="ares (Standalone)">%EMULATOR_ARES% --fullscreen --system "PlayStation" %ROM%</command>
@@ -1855,7 +1856,7 @@
         <path>%ROMPATH%/scummvm</path>
         <extension>.scummvm .SCUMMVM .svm .SVM</extension>
         <command label="ScummVM">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/scummvm_libretro.so %ROM%</command>
-        <command label="ScummVM (Standalone)">./Apps/Scummvm/ScummVM-x86_64.AppImage %BASENAME%</command>
+        <command label="ScummVM (Standalone)">%EMULATOR_SCUMMVM% %BASENAME%</command>
         <platform>scummvm</platform>
         <theme>scummvm</theme>
     <command label="DREAMM (Standalone)">%STARTDIR%=%GAMEDIR% %EMULATOR_DREAMM% .</command>
@@ -1908,7 +1909,8 @@
         <command label="Genesis Plus GX">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/genesis_plus_gx_libretro.so %ROM%</command>
         <command label="Genesis Plus GX Wide">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/genesis_plus_gx_wide_libretro.so %ROM%</command>
         <command label="PicoDrive">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/picodrive_libretro.so %ROM%</command>
-        <command label="ares (Standalone)">%EMULATOR_ARES% --fullscreen --system "Mega CD" %ROM%</command>
+        <command label="ClownMDEmu (Standalone)">%EMULATOR_CLOWNMDEMU% %ROM%</command>
+    <command label="ares (Standalone)">%EMULATOR_ARES% --fullscreen --system "Mega CD" %ROM%</command>
         <platform>segacd</platform>
         <theme>segacd</theme>
     <command label="jgenesis (Standalone)">%EMULATOR_JGENESIS% --file-path %ROM%</command>
@@ -1979,7 +1981,8 @@
         <command label="Mesen-S">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/mesen-s_libretro.so %ROM%</command>
         <command label="Mesen (Standalone)">%EMULATOR_MESEN% --fullscreen %ROM%</command>
         <command label="Mednafen (Standalone)">%EMULATOR_MEDNAFEN% -force_module snes %ROM%</command>
-        <command label="ares (Standalone)">%EMULATOR_ARES% --fullscreen --system "Super Famicom" %ROM%</command>
+        <command label="ZSNES (Standalone)">%EMULATOR_ZSNES% %ROM%</command>
+    <command label="ares (Standalone)">%EMULATOR_ARES% --fullscreen --system "Super Famicom" %ROM%</command>
         <platform>snes</platform>
         <theme>snes</theme>
     </system>
@@ -2143,9 +2146,8 @@
         <fullname>Nintendo Switch</fullname>
         <path>%ROMPATH%/switch</path>
         <extension>.nca .NCA .nro .NRO .nso .NSO .nsp .NSP .xci .XCI</extension>
-        <command label="Suyu (RetroArch)">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/suyu_libretro.so %ROM%</command>
         <command label="Yuzu (Standalone)">./Apps/Yuzu/Yuzu.AppImage -f -g $PWD/%ROM%</command>
-        <command label="Eden (Standalone)">./Apps/Eden/Eden.AppImage -f -g $PWD/%ROM%</command>
+        <command label="Eden (Standalone)">%EMULATOR_EDEN% -f -g $PWD/%ROM%</command>
         <command label="Ryujinx (Standalone)">./Apps/Ryujinx/ryujinx.AppImage %ROM%</command>
         <command label="Citron (Standalone)">./Apps/Citron/Citron.AppImage -f -g $PWD/%ROM%</command>
         <platform>switch</platform>
