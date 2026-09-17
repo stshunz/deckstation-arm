@@ -16,15 +16,33 @@ unset APPIMAGE
 unset APPDIR
 unset OWD
 
-# 2. Buscamos el AppImage en esta carpeta
+# 2. Buscamos que lanzar: el AppImage, o un arbol ya extraido.
+#
+#    Por que el arbol extraido: algunos AppImages traen el AppRun MAL generado y
+#    buscan el binario en ruta absoluta del sistema (p. ej. `exec /usr/bin/retroarch`)
+#    en vez de dentro del propio AppImage (`$APPDIR/...`). Cuando eso pasa, se
+#    extrae con `--appimage-extract` y se deja el resultado en `app/`; aqui se
+#    detecta y se lanza igual.
+EXEC_TARGET=""
 APPIMAGE_FILE=$(find "$DIR" -maxdepth 1 \( -iname "*.AppImage" -o -iname "*.appimage" \) | head -n 1)
-if [ -z "$APPIMAGE_FILE" ]; then
-  echo "[lanzar.sh] No se encontro AppImage en $DIR" >&2
+if [ -n "$APPIMAGE_FILE" ]; then
+  EXEC_TARGET="$APPIMAGE_FILE"
+elif [ -x "$DIR/app/AppRun" ]; then
+  EXEC_TARGET="$DIR/app/AppRun"
+else
+  # Buscamos el ejecutable principal dentro de app/usr/bin
+  CANDIDATE=$(find "$DIR/app/usr/bin" -maxdepth 1 -type f -executable 2>/dev/null | head -n 1)
+  if [ -n "$CANDIDATE" ]; then
+    EXEC_TARGET="$CANDIDATE"
+  fi
+fi
+if [ -z "$EXEC_TARGET" ]; then
+  echo "[lanzar.sh] No se encontro ni AppImage ni arbol extraido en $DIR" >&2
   exit 1
 fi
 
 # 3. Buscamos el .home portable (junto al AppImage o en subcarpeta)
-HOME_DIR=$(find "$DIR" -maxdepth 2 -name "*.home" -type d | head -n 1)
+HOME_DIR=$(find "$DIR" -maxdepth 3 -name "*.home" -type d | head -n 1)
 if [ -n "$HOME_DIR" ]; then
   export HOME="$HOME_DIR"
 fi
@@ -37,4 +55,4 @@ elif [ -n "$DISPLAY" ] && [ -z "$SDL_VIDEODRIVER" ]; then
 fi
 
 # 5. Lanzamos
-exec "$APPIMAGE_FILE" "$@"
+exec "$EXEC_TARGET" "$@"
