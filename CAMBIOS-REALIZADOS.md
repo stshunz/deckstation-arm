@@ -317,8 +317,14 @@ este fix, el tile arrancaría a negro.**
    → Decidir cómo distribuirlo (su licencia es CC-BY-NC-ND y prohíbe redistribuir).
 3. **Vita3K**: no es AppImage (es un `.7z` extraído) y no tiene `.home`, así que ni es
    portable ni se le despliegan configs. → Revisar.
-4. **PCSX2 / PPSSPP**: sin build ARM, sus entradas del manifiesto se omiten (best-effort).
-5. **`setup_arm64_apps.py`**: headless pero con lista de repos hardcodeada (no lee
-   `git.txt`) y sin conectar al flujo. → Unificar con el Updater o retirarlo.
+4. **PCSX2**: sin build ARM, su entrada del manifiesto se omite (best-effort).
+5. **`setup_arm64_apps.py`: RETIRADO (18/09).** Era un instalador headless con la lista de
+   repos hardcodeada y **sin conectar al flujo** (nadie lo llamaba); el **Updater**
+   (`updater/git.txt`) es el único mecanismo de descarga. Al retirarlo se migró **PPSSPP**
+   a `git.txt` — **sí publica `anylinux-aarch64.AppImage`** en su repo oficial (la nota
+   "sin build ARM" era falsa). **Mesen** y **Redream** se descartaron: no hay build Linux
+   ARM limpio / el repo no existe en GitHub, y sus sistemas ya los cubren cores de
+   RetroArch. PSP ya funcionaba con el core `ppsspp_libretro.so`; el standalone queda como
+   segunda opción del sistema `psp`.
 
 

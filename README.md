@@ -54,10 +54,13 @@ deckstation-arm/
 ├── PKGBUILD                       # Paquete Arch (aarch64/armv7h)
 ├── deckstation-arm.install        # Hooks de instalación
 ├── scripts/
-│   ├── deckstation-setup.sh       # Descarga emuladores ARM64
-│   ├── deckstation-launcher.sh    # Launcher portable
+│   ├── deckstation-setup.sh       # Prepara el entorno (assets, cores, configs, BIOS) + abre el Updater
+│   ├── deckstation-launcher.sh    # Launcher portable (fija SDL_VIDEODRIVER)
 │   ├── deckstation-update.sh      # Actualizador
-│   └── setup_arm64_apps.py        # Setup ARM64: busca AppImages aarch64 en PkgForge/GitHub
+│   ├── deckstation-configs.sh     # Despliega la config base en cada emulador
+│   ├── deckstation-bios.sh        # Reparte las BIOS del usuario
+│   ├── deckstation-cores.sh       # Enlaza los cores del sistema a la carpeta portable
+│   └── lanzar.sh                  # Wrapper portable por emulador
 ├── overlay/
 │   └── usr/bin/deckstation        # Comando del sistema
 ├── configs/                       # Configs portable de emuladores (ver configs/README.md)

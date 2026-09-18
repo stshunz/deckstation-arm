@@ -43,7 +43,8 @@ Configuraciones personalizadas importadas desde el proyecto DeckStation ARM
 
 ## Qué NO se copió (y por qué)
 
-- **AppImages** — binarios grandes que se descargan con `setup_arm64_apps.py`.
+- **AppImages** — binarios grandes que descarga el **Updater** (`updater/git.txt`).
+  Antes los bajaba `setup_arm64_apps.py` (retirado el 18/09).
 - **ROMs / saves / memcards / savestates** — contenido del usuario, privado.
 - **Caches** (shader cache, mesa) — se regeneran en runtime.
 - **`QtProject.conf`** de DuckStation/Azahar — solo estado de UI con paths
