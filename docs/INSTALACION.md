@@ -48,52 +48,41 @@ sudo chmod +x /opt/deckstation/scripts/*.sh
 sudo ln -sf /opt/deckstation/scripts/deckstation-launcher.sh /usr/local/bin/deckstation
 ```
 
-## Descarga de emuladores
+## Instalación de los emuladores
 
-Una vez instalado el paquete, necesitas descargar los emuladores:
+Una vez instalado el paquete, la instalación inicial los pone **todos**:
 
 ```bash
-# Ejecutar setup
 deckstation-setup
 ```
 
-Esto descargará automáticamente:
-- **RetroArch**: Emulador multi-sistema (NES, SNES, GBA, N64, etc.)
-- **Dolphin**: GameCube y Wii
-- **Core cores**: Módulos adicionales de RetroArch
+Esto hace, en orden:
+
+1. Prepara el entorno: assets de RetroArch, cores del sistema, `libXss`.
+2. **Instala los 30 emuladores** de `updater/git.txt` en modo headless
+   (`updater.py --install-all`), con progreso y un resumen de los que fallen.
+3. Despliega `lanzar.sh` y las configs de fábrica en cada emulador. **Imprescindible**:
+   el `es_find_rules.xml` de ES-DE apunta a `Apps/<Emulador>/lanzar.sh`, no al AppImage.
+4. Reparte las BIOS que hayas puesto en `bios/`.
+
+Es **reejecutable**: lo que ya está instalado se salta. Son ~1,5 GB.
 
 ### Opciones del setup
 
 ```bash
-# Descarga normal (omite si ya existe)
-deckstation-setup
-
-# Forzar re-descarga completa
-deckstation-setup --force
-
-# Ver ayuda
-deckstation-setup --help
+deckstation-setup           # instalación normal (omite lo que ya existe)
+deckstation-setup --force   # re-descargar también lo que ya existe
+deckstation-setup --help    # ayuda
 ```
 
-### Descarga manual de emuladores
+### Actualizar o añadir emuladores sueltos
 
-Si prefieres instalar manualmente:
+Para eso está el **Updater** (ES-DE → Updater): lista los 30 con su estado, permite
+instalar/actualizar de uno en uno, tiene una entrada "Instalación completa inicial" y
+muestra el estado de las BIOS. Desde la terminal usa el mismo motor:
 
-#### RetroArch
 ```bash
-# Opción A: Desde pacman
-sudo pacman -S retroarch retroarch-assets
-
-# Opción B: Desde el setup
-deckstation-setup
-```
-
-#### Dolphin
-```bash
-# Desde pacman
-sudo pacman -S dolphin-emu
-
-# El setup creará symlinks automáticos
+python3 /opt/deckstation/Apps/Updater/updater.py --install-all   # instala lo que falte
 ```
 
 #### AetherSX2 (PS2)
@@ -135,9 +124,15 @@ Las BIOS tienen copyright: DeckStation **no las incluye ni las descarga**. Deja 
 donde cada emulador las espera:
 
 ```bash
+deckstation-bios.sh --check    # INFORME: qué falta y dónde va cada una
 deckstation-bios.sh            # reparte lo que falte (no destructivo)
 deckstation-bios.sh --dry-run  # ver qué haría
 ```
+
+El informe compara lo que tienes en `bios/<sistema>/` con `bios/required.txt` (qué
+fichero espera cada sistema, con alternativas) y muestra el destino de cada uno. También
+se ve **desde el salón**: ES-DE → Updater → **BIOS / Firmware**, y desde
+**Pocknix Tools → DeckStation BIOS**.
 
 También se ejecuta en cada arranque desde el launcher, así que basta con dejar los
 ficheros y abrir DeckStation. El mapa está en `bios/deploy-bios.txt`.
