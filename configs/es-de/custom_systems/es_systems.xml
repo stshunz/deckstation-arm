@@ -2515,8 +2515,17 @@
         <fullname>OpenROM</fullname>
         <path>%ROMPATH%/openrom</path>
         <extension>.sh</extension>
-        <command label="OpenROM">%EMULATOR_OS-SHELL% %ROM%</command>
+<command label="OpenROM">%EMULATOR_OS-SHELL% %ROM%</command>
         <platform>pc</platform>
         <theme>ports</theme>
-</system>
+    </system>
+    <system>
+        <name>os-shell</name>
+        <fullname>OS Shell (Scripts)</fullname>
+        <path>%ROMPATH%/os-shell</path>
+        <extension>.sh .SH .desktop .DESKTOP</extension>
+        <command label="Shortcut or script">%ENABLESHORTCUTS% %EMULATOR_OS-SHELL% %ROM%</command>
+        <platform>os-shell</platform>
+        <theme>os-shell</theme>
+    </system>
 </systemList>
