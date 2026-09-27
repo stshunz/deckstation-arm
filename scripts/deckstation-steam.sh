@@ -45,9 +45,9 @@ say() { printf '%s\n' "$1" >&2; }
 #   uso: steam_add.py appid <exe> <nombre>   -> imprime el appid calculado
 # ----------------------------------------------------------------------------
 write_steam_add() {
-    grep -q "DECKSTATION_HELPER steam_add.py 3f6725b2040c" "$STEAM_ADD_PY" 2>/dev/null && return 0
+    grep -q "DECKSTATION_HELPER steam_add.py 3f6725b2040c-appid" "$STEAM_ADD_PY" 2>/dev/null && return 0
     cat > "$STEAM_ADD_PY" <<'SAEOF'
-# DECKSTATION_HELPER steam_add.py 3f6725b2040c
+# DECKSTATION_HELPER steam_add.py 3f6725b2040c-appid
 #!/usr/bin/env python3
 # DeckStation - accesos directos de Steam
 #
@@ -122,17 +122,20 @@ else:
 key = 'shortcuts' if 'shortcuts' in root else list(root)[0]
 sc = root[key]
 
-# ya existe uno con el mismo LaunchOptions? -> actualizar en vez de duplicar
+appid = appid_acceso_directo(EXE, NAME)
+
+# ya existe uno con el MISMO appid (mismo Exe+Nombre)? -> actualizar en vez de duplicar.
+# OJO: NO emparejar por LaunchOptions: WProton tambien lo tiene vacio, y al anadir
+# DeckStation se sobrescribia su entrada (WProton desaparecia de Steam).
 idx = None
 for i, e in sc.items():
-    if isinstance(e, dict) and e.get('LaunchOptions', '') == OPTS:
+    if isinstance(e, dict) and e.get('appid') == appid:
         idx = i
         break
 if idx is None:
     nums = [int(i) for i in sc.keys() if i.isdigit()]
     idx = str(max(nums) + 1 if nums else 0)
 
-appid = appid_acceso_directo(EXE, NAME)
 sc[idx] = {
     'appid': appid, 'AppName': NAME, 'Exe': '"%s"' % EXE,
     'StartDir': '"%s"' % STARTDIR, 'icon': ICON, 'ShortcutPath': '',
@@ -254,10 +257,16 @@ main() {
     done
 
     # Solo desde el modo Escritorio: en el modo Juego la sesión ES Steam.
-    # Se comprueba con las variables de la sesión gráfica Y con pgrep (por si
-    # se ejecuta por SSH, donde esas variables no existen).
+    # Se comprueba con las variables de la sesión gráfica Y con el compositor
+    # real (por si se ejecuta por SSH, donde esas variables no existen).
+    # OJO: NO volver a "pgrep -f gamescope": matchea el helper root SIEMPRE
+    # activo /usr/local/bin/pocknix-gamescope-rt (su cmdline contiene gamescope)
+    # y da falso positivo en modo Escritorio, bloqueando siempre el alta en Steam.
+    # `pidof gamescope gamescope-wl` mira el NOMBRE del proceso (gamescope se
+    # renombra a gamescope-wl), igual que hace pocknix-gamescope-rt, y solo
+    # engancha un compositor de verdad.
     if [ -n "${GAMESCOPE_WAYLAND_DISPLAY:-}" ] || [ "${XDG_CURRENT_DESKTOP:-}" = "gamescope" ] \
-       || pgrep -f gamescope >/dev/null 2>&1; then
+       || pidof gamescope gamescope-wl >/dev/null 2>&1; then
         say "ERROR: esto solo se puede hacer desde el modo Escritorio."
         say "En el modo Juego, la sesión ES Steam y habría que cerrarlo."
         exit 1
