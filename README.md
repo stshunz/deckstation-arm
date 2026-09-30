@@ -39,6 +39,15 @@ ninguna distribución concreta y **todo queda autocontenido en su propia carpeta
   — **incluidos los cores de RetroArch** (ver [Cores](#cores))
 - **Modular**: Cada emulador es independiente
 
+## Estado (octubre 2026)
+
+| Área | Estado |
+|---|---|
+| **Cores** | 259 instalados · **211 ofrecidos en ES-DE** (todos con alternativa por sistema) · 3 fuera por crashear |
+| **BIOS** | **40 sistemas** en el manifiesto (`deckstation-bios.sh --check` → 40/40 cubiertos) |
+| **Configs** | Base propia + aportes de Batocera (core options de RetroArch, 27 juegos de Model 3, Amiberry) |
+| **Autonomía** | 100 %: cores, BIOS y configs viven **dentro** de `/opt/deckstation` |
+
 ## Arquitecturas
 
 | Arquitectura | Estado |
@@ -70,6 +79,14 @@ sin depender de los paquetes del sistema:
 - ⚠️ **Cores personales**: lo que pongas tú en la carpeta portable **no se toca nunca**
   (los scripts solo añaden lo que falta). Ideal para cores con licencias restrictivas que no se
   pueden distribuir.
+- **Todos los cores instalados aparecen en ES-DE**: cada core de la carpeta portable tiene su
+  `<command>` en `es_systems.xml`, así que puedes elegir **emulador alternativo por sistema**. El
+  predeterminado (la primera opción) está curado a mano: **PSX → SwanStation**, **CPS1/2/3 →
+  FinalBurn Neo**, **SNES → Snes9x**, **N64 → Mupen64Plus-Next**, **GBA → mGBA**… Las alternativas
+  se generan con `tools/inserta-cores-es-de.py`.
+- ⚠️ **Tres cores se quedan fuera a propósito** porque crashean: `mednafen_snes`,
+  `nside_sfc_balanced` y `mame2015` (comprobado con ROM real y con el core suelto). El smoke test
+  está en `tools/smoke-cores-geometry.sh`.
 
 ## Estructura del repo
 
@@ -101,7 +118,7 @@ deckstation-arm/
 │   ├── deploy-bios.txt            #   A dónde va cada sistema
 │   ├── README.md                  #   Versión larga: qué es cada BIOS y cómo conseguirla legalmente
 │   └── <sistema>/                 #   Aquí dejas tus BIOS (psx/, dreamcast/, cdimono1/, ...)
-│                                  #   20 sistemas soportados en el manifiesto
+│                                  #   40 sistemas soportados en el manifiesto
 ├── overlay/
 │   └── usr/bin/deckstation        # Comando del sistema
 ├── configs/                       # Configs portable de emuladores (ver configs/README.md)
@@ -111,7 +128,12 @@ deckstation-arm/
 │   ├── duckstation/  azahar/  citron/  dolphin/
 │   ├── pcsx2/  ppsspp/  flycast/  dosboxpure/  mame/
 │   ├── rmg/  zsnes/  supermodel/  antimicrox/  vita3k/  rpcs3/  xemu/  xenia/
+│   ├── amiberry/                  #   Amiga: conf + base SDL de mandos
 │   └── es-de-home/
+├── tools/                         # Herramientas de mantenimiento (no las usa el runtime)
+│   ├── inserta-cores-es-de.py     #   Meter cada core instalado como alternativa en es_systems.xml
+│   ├── smoke-cores-geometry.sh    #   Probar cores con ROM real (criterio: línea "Geometry")
+│   └── auditoria-es-de.py         #   Auditar comandos muertos/duplicados del es_systems
 └── docs/
     ├── INSTALACION.md
     └── PORTABILIDAD-DISTROS.md
@@ -233,6 +255,8 @@ GPL v2+
 - **stshunz** — creador original de DeckStation (https://github.com/stshunz)
 - **DeckStation ARM** — adaptación para arquitecturas ARM
 - **Emuladores**: RetroArch, Dolphin, DuckStation, PPSSPP, etc. (versiones ARM64)
+- **Batocera** — su colección de configuraciones (core options de RetroArch, secciones por juego de
+  Supermodel, conf de Amiberry, base SDL de mandos) ha nutrido la configuración base de DeckStation
 - **Cores que nadie publica**: compilados por el proyecto y publicados en
   [`arcadematicas/deckstation-cores`](https://github.com/arcadematicas/deckstation-cores)
   (Azahar — GPL-2.0-or-later; bsnes-hd — GPL-3.0-only)
