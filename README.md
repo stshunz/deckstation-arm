@@ -93,7 +93,7 @@ deckstation-arm/
 │   └── lanzar.sh                   # Wrapper portable por emulador (lo que lanza ES-DE)
 ├── updater/                       # Centro de Mando (GUI) + motor de descarga headless
 │   ├── updater.py                 #   GUI y `--install-all` (mismo motor)
-│   ├── git.txt                    #   62 fuentes aarch64 activas (y 12 comentadas sin build)
+│   ├── git.txt                    #   31 emuladores aarch64 activos (y 12 sin build, comentados)
 │   ├── launcher.sh                #   Arranque con el driver SDL del compositor
 │   └── README.md                  #   Port a aarch64: qué se cambió y por qué
 ├── bios/                          # BIOS/firmware del usuario (los ficheros NO van en git)
