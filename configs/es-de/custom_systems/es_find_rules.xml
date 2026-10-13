@@ -966,7 +966,6 @@
         </rule>
         <rule type="staticpath">
             <entry>./Apps/Xemu/lanzar.sh</entry>
-
         </rule>
     </emulator>
     <emulator name="XEMU_CHIHIRO">
