@@ -1,7 +1,9 @@
 # Azahar en el AYN Odin 3
 
-Estado: **2026-10-03**. Documento escrito a partir de la sesión de diagnóstico
-real sobre el Odin 3 (`ssh odin`, usuario `deck`, hostname `pocknix-1`).
+Estado: **2026-10-03** (gamepad: cerrado el **15/10/2026** — la regla udev ya es
+permanente y `pocknix-gamepad-quit` está instalado). Documento escrito a partir
+de la sesión de diagnóstico real sobre el Odin 3 (`ssh odin`, usuario `deck`,
+hostname `pocknix-1`).
 
 Hay **dos problemas distintos** y conviene no mezclarlos:
 
@@ -44,10 +46,10 @@ dispositivo como joystick ("systemd/udev ya setea para joysticks"). En este
 equipo es falso, así que su regla de permisos **nunca llega a dispararse**:
 depende de `ENV{ID_INPUT_JOYSTICK}` y esa variable no existe.
 
-### Solución probada
+### Solución (y ya es permanente, no un test)
 
-Fijar `ID_INPUT_JOYSTICK=1` para ese dispositivo concreto. Regla temporal
-usada en la sesión:
+Fijar `ID_INPUT_JOYSTICK=1` para ese dispositivo concreto. Regla que quedó
+instalada en firme el **15/10/2026**:
 
 ```
 # /etc/udev/rules.d/60-input-id2-odin3-gamepad.rules
@@ -76,10 +78,26 @@ sudo udevadm control --reload-rules
 sudo udevadm trigger --action=change /sys/class/input/event6 /sys/class/input/js0
 ```
 
-> **PENDIENTE:** decidir si la regla se queda permanente (afecta a todos los
-> programas SDL del sistema) y en qué fichero. El sitio natural es
-> `70-odin3-gamepad.rules`, junto al resto de reglas del proyecto, corrigiendo
-> el comentario que asume que udev ya marcó el joystick.
+> **HECHA e instalada en firme (15/10/2026).** La regla se queda permanente en
+> `/etc/udev/rules.d/60-input-id2-odin3-gamepad.rules` (en el centro vive en
+> `overlay/etc/udev/rules.d/60-input-id2-odin3-gamepad.rules`, que es justo la
+> ruta que entra en la imagen: `build-sd-image.sh` copia `overlay/**` a `/`, y el
+> paquete `pocknix-system-overlay` lo lleva también por `-Syu`).
+>
+> **Por qué el nombre importa.** `60-input-id2-…` no es cosmético: tiene que
+> ordenarse **después** de `60-input-id.rules` (el builtin `input_id` que calcula
+> mal `.INPUT_CLASS` y lo marca como ratón) y **antes** de
+> `60-persistent-input.rules` (que crea los symlinks
+> `…-event-joystick` / `…-joystick` a partir de esa clasificación). Con `60-`
+> delante y `input-id2` de nombre cae exactamente entre los dos.
+>
+> **Efecto colateral bueno:** la regla de permisos `70-odin3-gamepad.rules` vuelve
+> a funcionar. Depende de `ENV{ID_INPUT_JOYSTICK}` y hasta ahora **nunca se
+> disparaba** porque esa variable no existía; con esta regla ya existe (y como
+> `70-` va después de `60-`, la ve). Se ha corregido también el comentario de
+> `70-odin3-gamepad.rules`, que asumía que udev ya marcaba el joystick.
+> `install-odin3-gamepad-perms.sh` instala ahora las dos, la de clasificación
+> primero.
 
 ### GUID del Odin
 
@@ -122,6 +140,22 @@ funcionar; la vía que funciona es el `event6` físico.
 `50-inputplumber-hide-event4-early.rules` y `96-...-late.rules` en
 `/run/udev/rules.d/`), así que la regla de arriba no choca con la regla del
 proyecto de "no descubrir event6".
+
+### `pocknix-gamepad-quit` (START+SELECT) — ya instalado
+
+Para cerrar la app en curso en ES-DE (los emuladores standalone y las GUIs no
+tienen forma de cerrarse: no hay gestor de ventanas y Alt+F4 no llega) está
+instalado **`pocknix-gamepad-quit`**: un servicio de **usuario**
+(`~/.config/systemd/user/pocknix-gamepad-quit.service`) con el script en
+`/usr/local/bin/pocknix-gamepad-quit`. Al detectar **START+SELECT** cierra lo que
+cuelgue de ES-DE: primero **SIGTERM** (que guarde) y, si sigue vivo, SIGKILL.
+
+**Lee el mando SIN capturarlo**: el emulador sigue recibiendo sus botones
+normales (no se queda "robado" el `/dev/input/event`); el acceso lo da el grupo
+`input`, que `deck` ya tiene, así que no necesita root ni `SupplementaryGroups`.
+
+Fuente en el centro: `tools/pocknix-gamepad-quit` + `tools/pocknix-gamepad-quit.service`;
+se instala con `tools/install-gamepad-quit.sh` (idempotente).
 
 ---
 
@@ -227,7 +261,8 @@ Riesgo asumido: Azahar podría dejar de componerse bien dentro de gamescope
 - `graphics_api=2` (Vulkan) no se ha tocado. Ojo: el enum es
   `Software, OpenGL, Vulkan`, así que `1` sería OpenGL, y se guarda como
   `@Variant(...)`, no como entero pelado.
-- La regla udev **no** se ha convertido en permanente.
+- La regla udev **sí** es permanente desde el 15/10/2026
+  (`/etc/udev/rules.d/60-input-id2-odin3-gamepad.rules`).
 - No hay copia de seguridad de `qt-config.ini` porque **no se ha modificado**.
 
 ---
