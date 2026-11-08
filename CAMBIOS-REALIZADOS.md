@@ -336,3 +336,13 @@ este fix, el tile arrancaría a negro.**
 - `bios/required.txt`: añadidos `mcpx_1.0.bin`, `Complex_4627v1.03.bin`, `xbox_hdd.qcow2`, `xbox_eeprom.bin` para el sistema `xbox`.
 - `bios/deploy-bios.txt`: se despliegan también a `/opt/deckstation/Apps/Xemu/xemu*.AppImage.home/.local/share/xemu/xemu/` (además de `/opt/deckstation/bios/xbox/`) para cubrir el caso en que xemu busque relativos al `.home`. `xbox_hdd.qcow2` va al directorio de datos de xemu (no exclusivamente `bios/`) según configuración estándar de xemu.
 - `xbox`: BIOS actualizados con alternativas (xbox-5838.bin retail 256KB, xbox-4627_debug.bin debug 1MB), mcpx_1.0.bin también acepta bootrom.bin; HDD xbox_hdd.qcow2 copiado desde Batocera SHARE/saves/xbox (394MB); `xbox_eeprom.bin` indicado como generado por xemu (no requerido). `xemu.toml` preseed desde plantilla ROCKNIX adaptada a DeckStation (Vulkan, fullscreen, mem_limit=128). Añadida segunda opción (core libretro xemu_libretro.so) en es_systems.xml con comentario sobre pruning por cores-sync.
+
+## Xbox: hakuX-lr (core libretro) — 08/11/2026
+- Sistema **Xbox** en ES-DE con la entrada **hakuX (Vulkan)**; extensiones `.iso`,
+  `.chd`, `.xiso` y `.squashfs`.
+- Requiere el core **hakuX-lr** (`libretro-hakux`) en la carpeta portable de cores.
+  Version probada: **0.23.0**. Es un binario **prebuilt** del release
+  `portare-ch/hakuX-lr` (`hakux-<ver>-aarch64.tar.gz`): no se compila.
+- Comando: `%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/hakux_libretro.so %ROM%`
+  (sin `--vulkan`: el driver ya está en `retroarch.cfg`).
+- Añadidos `scripts/deckstation-cores-fetch.sh` y `scripts/deckstation-emulators-sync.sh`.

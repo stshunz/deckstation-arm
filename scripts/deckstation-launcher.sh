@@ -112,6 +112,13 @@ fi
 if [ -x "$DECKSTATION_ROOT/scripts/deckstation-cores-sync.sh" ]; then
     DECKSTATION_ROOT="$DECKSTATION_ROOT" "$DECKSTATION_ROOT/scripts/deckstation-cores-sync.sh" >/dev/null 2>&1 || true
 fi
+# ES-DE: dejar solo los EMULADORES realmente instalados (Citra, Cemu,
+# PPSSPP, Xenia...): quita del es_systems.xml activo los <command> cuyo
+# %EMULATOR_X% no esta. Va DESPUES del de cores porque los dos podan el
+# mismo fichero y el ultimo que escribe es el que manda.
+if [ -x "$DECKSTATION_ROOT/scripts/deckstation-emulators-sync.sh" ]; then
+    DECKSTATION_ROOT="$DECKSTATION_ROOT" "$DECKSTATION_ROOT/scripts/deckstation-emulators-sync.sh" >/dev/null 2>&1 || true
+fi
 
 # 8. FORZAR SDL AL COMPOSITOR (gamescope / Plasma)
 #    Sin esto, ES-DE puede quedarse en NEGRO al lanzarse desde el modo juego de
@@ -146,15 +153,16 @@ unset _icd
 
 # 8-ter. NO HEREDAR EL LIMITE DE FPS DEL ULTIMO JUEGO DE STEAM
 #
-# El atomo GAMESCOPE_FPS_LIMIT lo escribe el cliente Steam POR APP, pero en Pocknix un
-# parche lo hace PERSISTIR: al pasar a una app NO-Steam (DeckStation) el cliente no lo
-# resetea -> ES-DE y los emuladores arrancaban al 30/60 del ultimo juego de Steam, y un
-# emulador de 60 fps sincroniza a vblank -> iba a media velocidad ("lentos").
-# Lo ponemos a 0 (sin limite): los emuladores van a su ritmo; el limitador del QAM sigue
-# disponible para los juegos de Steam.
+# El atomo GAMESCOPE_FPS_LIMIT lo escribe el cliente Steam POR APP, pero nuestro parche
+# 0009 lo hace PERSISTIR: al pasar a una app NO-Steam (DeckStation) el cliente no lo
+# resetea, asi que ES-DE y los emuladores arrancaban al 30/60 del ultimo juego de Steam
+# -> juegos "lentos" (un emulador de 60 fps sincroniza a vblank y va a media velocidad).
+#
+# Lo ponemos a 0 (sin limite) al arrancar DeckStation: los emuladores van a su ritmo.
+# El limitador del QAM sigue disponible para los juegos de Steam.
 if command -v xprop >/dev/null 2>&1 && [ -n "${DISPLAY:-}" ]; then
     xprop -root -f GAMESCOPE_FPS_LIMIT 32c -set GAMESCOPE_FPS_LIMIT 0 2>/dev/null \
-        && echo "  Limite de FPS: sin limite (evita heredar el del ultimo juego)"
+        && echo "  ⏱️  Limite de FPS: sin limite (evita heredar el del ultimo juego)"
 fi
 
 # 9. LANZAR ES-DE (el AppImage original)
