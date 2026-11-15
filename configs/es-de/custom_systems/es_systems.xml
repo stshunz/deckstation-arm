@@ -3028,6 +3028,15 @@
         <theme>zxspectrum</theme>
     </system>
     <system>
+        <name>openbor</name>
+        <fullname>OpenBOR</fullname>
+        <path>%ROMPATH%/openbor</path>
+        <extension>.pak .PAK .spk .SPK .anybor .ANYBOR .zip .ZIP</extension>
+        <command label="OpenBOR (AnyBOR)">%EMULATOR_RETROARCH% -L %CORE_RETROARCH%/anybor_libretro.so %ROM%</command>
+        <platform>openbor</platform>
+        <theme>arcade</theme>
+    </system>
+    <system>
         <name>openrom</name>
         <fullname>OpenROM</fullname>
         <path>%ROMPATH%/openrom</path>

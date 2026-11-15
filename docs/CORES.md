@@ -97,6 +97,33 @@ La carpeta destino es la del RetroArch portable resuelta por el propio script
 (misma lógica que `deckstation-cores.sh`):
 `Apps/RetroArch/**/.AppImage.home/.config/retroarch/cores/`.
 
+## Extras propios (release `deckstation-cores`)
+
+`deckstation-cores-fetch.sh` (lo llama el setup) baja los cores que **nadie**
+publica ya compilados para aarch64 desde el release
+`arcadematicas/deckstation-cores` (tag actual: `cores-2026-11`).
+
+| Core | Uso | Sistema ES-DE |
+|---|---|---|
+| `azahar` | Nintendo 3DS | `n3ds` |
+| `bsnes_hd_beta` | SNES HD | `snes`/`sfc`/`snesh` |
+| `anybor` | **OpenBOR** (perfiles de motor seleccionables) | `openbor` |
+
+- El `.info` se toma **primero del release** (es el de la versión exacta del
+  `.so`) y solo si no está se cae a libretro-super. Así un core de terceros no
+  depende de que libretro-super lo tenga al día (el de `anybor` iba por detrás).
+- Si el `.so` ya existe pero falta el `.info`, el script completa el `.info`.
+- Para añadir un sistema nuevo: bloque `<system>` en
+  `configs/es-de/custom_systems/es_systems.xml` + entrada en `CORES_EXTRAS`.
+
+## OpenBOR (AnyBOR)
+
+- Carpeta de ROMs: `ROMs/openbor/` (`.pak`, `.spk`, `.anybor`, `.zip`).
+- Core: `anybor_libretro.so` — **AnyBOR 0.2.33**, licencia **no comercial**
+  (incluye OpenBOR 3400 con sus términos de no venta).
+- Elige el perfil de motor por build tag y claves del contenido; también se
+  puede forzar desde las opciones del core en RetroArch.
+
 ## ⚠️ No usar el «Online Updater» de RetroArch como vía normal
 
 El menú **Online Updater** de RetroArch *Core Updater / Update Installed Cores*
