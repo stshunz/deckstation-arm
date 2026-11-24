@@ -68,6 +68,124 @@ from pygame.locals import *
 
 pygame.init()
 pygame.joystick.init()
+
+
+# ---------------------------------------------------------------------------
+# Puente evdev para el mando.
+# Con Steam Input activo (modo juego), Steam CAPTURA el mando fisico: pygame
+# enumera el dispositivo pero no recibe ni un evento. Steam ademas expone un
+# pad virtual (Microsoft X-Box 360 pad) que SI esta libre. Este puente busca un
+# gamepad libre (no capturado) y traduce sus eventos a eventos pygame, asi el
+# resto del Updater no cambia y RetroArch/ES-DE siguen con su configuracion.
+# Si no hay nada capturado, no hace nada: pygame ya funciona solo.
+# ---------------------------------------------------------------------------
+def _evdev_bridge_start():
+    import fcntl, glob, os, select, struct, threading
+    EVIOCGRAB = 0x40044590
+    EV_KEY, EV_ABS = 1, 3
+    EV_SYN = 0
+    BTN_SOUTH, BTN_EAST, BTN_NORTH, BTN_WEST = 0x130, 0x131, 0x133, 0x134
+    BTN_DPAD = {0x220: 11, 0x221: 12, 0x222: 13, 0x223: 14}  # up,down,left,right -> botones 11..14
+    ABS_HAT0X, ABS_HAT0Y = 0x10, 0x11
+    FMT = "llHHi"
+    SZ = struct.calcsize(FMT)
+
+    def can_grab(path):
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            return None
+        try:
+            fcntl.ioctl(fd, EVIOCGRAB, 1)
+            fcntl.ioctl(fd, EVIOCGRAB, 0)
+            return fd          # libre
+        except OSError:
+            os.close(fd)
+            return False       # capturado por otro
+
+    def is_pad(path):
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            return False
+        try:
+            # EV_KEY con BTN_SOUTH, o EV_ABS con ABS_HAT0X
+            import array
+            kb = array.array("B", [0] * ((0x2ff + 7) // 8))
+            ab = array.array("B", [0] * ((0x3f + 7) // 8))
+            try:
+                fcntl.ioctl(fd, 0x80084520 | (len(kb) << 16), kb)  # EVIOCGBIT(EV_KEY)
+            except Exception:
+                pass
+            try:
+                fcntl.ioctl(fd, 0x80084503 | (len(ab) << 16), ab)  # EVIOCGBIT(EV_ABS)
+            except Exception:
+                pass
+            def bit(arr, code):
+                return code // 8 < len(arr) and (arr[code // 8] >> (code % 8)) & 1
+            return bit(kb, BTN_SOUTH) or bit(ab, ABS_HAT0X)
+        except Exception:
+            return False
+        finally:
+            os.close(fd)
+
+    def scan():
+        for path in sorted(glob.glob("/dev/input/event*")):
+            if not is_pad(path):
+                continue
+            fd = can_grab(path)
+            if fd:                       # libre: nos vale
+                try:
+                    name = open("/sys/class/input/%s/device/name" % os.path.basename(path)).read().strip()
+                except OSError:
+                    name = path
+                print("evdev: usando %s (%s)" % (path, name), flush=True)
+                return fd
+        return None
+
+    def run():
+        fd = None
+        buf = b""
+        while True:
+            if fd is None:
+                fd = scan()
+                if fd is None:
+                    import time; time.sleep(2); continue
+            r, _, _ = select.select([fd], [], [], 1.0)
+            if not r:
+                continue
+            try:
+                data = os.read(fd, SZ * 64)
+            except OSError:
+                os.close(fd); fd = None; buf = b""; continue
+            buf += data
+            while len(buf) >= SZ:
+                ev = buf[:SZ]; buf = buf[SZ:]
+                _, _, typ, code, val = struct.unpack(FMT, ev)
+                if typ == EV_KEY and val == 1:
+                    if code in (BTN_SOUTH, BTN_EAST, BTN_NORTH, BTN_WEST):
+                        idx = {BTN_SOUTH: 0, BTN_EAST: 1, BTN_NORTH: 3, BTN_WEST: 2}[code]
+                        pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": idx}))
+                    elif code in BTN_DPAD:
+                        pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": BTN_DPAD[code]}))
+                elif typ == EV_ABS and code in (ABS_HAT0X, ABS_HAT0Y):
+                    hx = val if code == ABS_HAT0X else 0
+                    hy = val if code == ABS_HAT0Y else 0
+                    pygame.event.post(pygame.event.Event(pygame.JOYHATMOTION, {"joy": 0, "hat": 0, "value": (hx, -hy)}))
+
+    # Solo si el primer gamepad esta capturado (Steam Input): si esta libre, pygame lee solo.
+    for path in sorted(glob.glob("/dev/input/event*")):
+        if not is_pad(path):
+            continue
+        if can_grab(path) is False:      # capturado -> hace falta el puente
+            threading.Thread(target=run, daemon=True).start()
+        return
+
+
+try:
+    _evdev_bridge_start()
+except Exception as _e:  # nunca debe impedir que el Updater arranque
+    print("evdev: puente no disponible:", _e, flush=True)
 # GUI: pantalla completa (usa la resolucion actual del compositor, ya rotada).
 # Headless (--install-all/--bios-check): ventana virtual con dummy.
 # SCREEN_WIDTH/HEIGHT se usan en todo el dibujado -> definir SIEMPRE.
