@@ -926,6 +926,7 @@ echo "Resumen: $OK convertidas, $FAIL fallidas (de $TOTAL)"
         """Opciones del menu CORES_MENU."""
         return [
             "Actualizar pack de cores (paquete del sistema)",
+            "Actualizar hakuX (core propio)",
             "Cores sueltos (buildbot ARM)",
             "Volver",
         ]
@@ -940,6 +941,8 @@ echo "Resumen: $OK convertidas, $FAIL fallidas (de $TOTAL)"
         accion = opciones[idx]
         if accion.startswith("Actualizar pack"):
             self._cores_pack_actualizar()
+        elif accion.startswith("Actualizar hakuX"):
+            self._cores_hakux_actualizar()
         elif accion.startswith("Cores sueltos"):
             self.state = "CORES_LOOSE"
             self._cores_loose_cargar()
@@ -968,6 +971,31 @@ echo "Resumen: $OK convertidas, $FAIL fallidas (de $TOTAL)"
         except Exception as e:
             self._cores_msg = f"Error actualizando el pack: {e}"
         self._cores_listo = False      # los estados cambian al copiar el pack
+        self._cores_busy = False
+
+    def _cores_hakux_actualizar(self):
+        """Actualiza el core propio hakuX (paquete libretro-hakux) + puente, como el pack."""
+        if self._cores_busy:
+            return
+        self._cores_busy = True
+        self._cores_msg = "Actualizando hakuX (pide root)..."
+        threading.Thread(target=self._cores_hakux_worker, daemon=True).start()
+
+    def _cores_hakux_worker(self):
+        script = self._cores_script("deckstation-cores-pack.sh")
+        env = dict(self._cores_env(), DECKSTATION_CORES_PKG="libretro-hakux",
+                   DECKSTATION_CORES_EXTRA="")
+        try:
+            r = subprocess.run([script], env=env, capture_output=True, text=True, timeout=600)
+            lineas = ((r.stdout or "") + (r.stderr or "")).strip().split("\n")
+            ultima = next((l.strip() for l in reversed(lineas) if l.strip()), "")
+            if r.returncode == 0:
+                self._cores_msg = "hakuX al dia. " + (ultima or "")
+            else:
+                self._cores_msg = f"hakuX no se pudo actualizar: {ultima or 'error'}"
+        except Exception as e:
+            self._cores_msg = f"Error actualizando hakuX: {e}"
+        self._cores_listo = False
         self._cores_busy = False
 
     def _cores_loose_cargar(self, force=False):
