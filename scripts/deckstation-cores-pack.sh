@@ -41,7 +41,7 @@ SCRIPTS_DIR="${DECKSTATION_ROOT}/scripts"
 CORES_PKG="${DECKSTATION_CORES_PKG:-libretro-cores-pocknix}"
 # Paquetes de cores PROPIOS que no van dentro del pack pero si deben actualizarse con el
 # (hakuX es un core propio, no esta en el buildbot: sin esto el Updater nunca lo tocaba).
-CORES_EXTRA="${DECKSTATION_CORES_EXTRA:-libretro-hakux}"
+CORES_EXTRA="${DECKSTATION_CORES_EXTRA-libretro-hakux}"
 
 DRY=0
 BRIDGE=1
