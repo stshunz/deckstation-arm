@@ -100,7 +100,21 @@ if [ "$DRY" = 1 ]; then
     log "SIMULACION: pacman -Sy --needed --noconfirm ${CORES_PKG} ${CORES_EXTRA}"
 else
     log "Actualizando el pack de cores (paquete ${CORES_PKG})..."
-    if elevar pacman -Sy --needed --noconfirm "${CORES_PKG}"; then
+    # Con el helper del sistema (regla polkit) no hace falta dialogo de contrasena en
+    # Game Mode; si no esta, se cae a pacman como antes.
+    if [ -x /usr/bin/pocknix-cores-update ]; then
+        ELEVAR_CMD=(elevar /usr/bin/pocknix-cores-update "${CORES_PKG}")
+        for _p in ${CORES_EXTRA}; do ELEVAR_CMD+=("${_p}"); done
+        set -- "${ELEVAR_CMD[@]}"
+        if "$@"; then
+            log "cores del sistema al dia"
+            CORES_EXTRA=""
+            CORES_PKG_DONE=1
+        else
+            warn "no se pudieron actualizar los cores (¿helper/polkit?)"
+            exit 1
+        fi
+    elif elevar pacman -Sy --needed --noconfirm "${CORES_PKG}"; then
         log "paquete ${CORES_PKG} al dia"
     else
         warn "no se pudo instalar/actualizar ${CORES_PKG} (¿esta en el repositorio?)"
