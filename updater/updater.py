@@ -137,6 +137,10 @@ def _evdev_bridge_start():
                 except OSError:
                     name = path
                 print("evdev: usando %s (%s)" % (path, name), flush=True)
+                try:
+                    open("/tmp/updater-evdev.log", "a").write("usando %s (%s)\n" % (path, name))
+                except OSError:
+                    pass
                 return fd
         return None
 
@@ -160,12 +164,20 @@ def _evdev_bridge_start():
                 ev = buf[:SZ]; buf = buf[SZ:]
                 _, _, typ, code, val = struct.unpack(FMT, ev)
                 if typ == EV_KEY and val == 1:
+                    try:
+                        open("/tmp/updater-evdev.log", "a").write("KEY code=%#x val=%d\n" % (code, val))
+                    except OSError:
+                        pass
                     if code in (BTN_SOUTH, BTN_EAST, BTN_NORTH, BTN_WEST):
                         idx = {BTN_SOUTH: 0, BTN_EAST: 1, BTN_NORTH: 3, BTN_WEST: 2}[code]
                         pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": idx}))
                     elif code in BTN_DPAD:
                         pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": BTN_DPAD[code]}))
                 elif typ == EV_ABS and code in (ABS_HAT0X, ABS_HAT0Y):
+                    try:
+                        open("/tmp/updater-evdev.log", "a").write("ABS code=%#x val=%d\n" % (code, val))
+                    except OSError:
+                        pass
                     hx = val if code == ABS_HAT0X else 0
                     hy = val if code == ABS_HAT0Y else 0
                     pygame.event.post(pygame.event.Event(pygame.JOYHATMOTION, {"joy": 0, "hat": 0, "value": (hx, -hy)}))
