@@ -39,6 +39,9 @@ DECKSTATION_ROOT="${DECKSTATION_ROOT:-$(cd "$(dirname "$SELF")/.." && pwd)}"
 SCRIPTS_DIR="${DECKSTATION_ROOT}/scripts"
 
 CORES_PKG="${DECKSTATION_CORES_PKG:-libretro-cores-pocknix}"
+# Paquetes de cores PROPIOS que no van dentro del pack pero si deben actualizarse con el
+# (hakuX es un core propio, no esta en el buildbot: sin esto el Updater nunca lo tocaba).
+CORES_EXTRA="${DECKSTATION_CORES_EXTRA:-libretro-hakux}"
 
 DRY=0
 BRIDGE=1
@@ -94,7 +97,7 @@ fi
 # todo el sistema sobre la base congelada de Pocknix es un landmine (ver
 # AGENTS.md). El repo que sirve el paquete es el de Pocknix.
 if [ "$DRY" = 1 ]; then
-    log "SIMULACION: pacman -Sy --needed --noconfirm ${CORES_PKG}"
+    log "SIMULACION: pacman -Sy --needed --noconfirm ${CORES_PKG} ${CORES_EXTRA}"
 else
     log "Actualizando el pack de cores (paquete ${CORES_PKG})..."
     if elevar pacman -Sy --needed --noconfirm "${CORES_PKG}"; then
@@ -103,6 +106,16 @@ else
         warn "no se pudo instalar/actualizar ${CORES_PKG} (¿esta en el repositorio?)"
         exit 1
     fi
+    # Cores propios fuera del pack (hakuX). Si un extra no existe en el repo, se avisa
+    # pero no se aborta: el pack principal ya esta al dia.
+    for _p in ${CORES_EXTRA}; do
+        log "Actualizando core propio: ${_p}..."
+        if elevar pacman -Sy --needed --noconfirm "${_p}"; then
+            log "paquete ${_p} al dia"
+        else
+            warn "no se pudo actualizar ${_p} (¿esta en el repositorio?)"
+        fi
+    done
 fi
 
 # --- 2) Puente: copiar los cores del sistema a la carpeta de RetroArch ---------
