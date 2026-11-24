@@ -109,21 +109,18 @@ def _evdev_bridge_start():
         except OSError:
             return False
         try:
-            # EV_KEY con BTN_SOUTH, o EV_ABS con ABS_HAT0X
-            import array
-            kb = array.array("B", [0] * ((0x2ff + 7) // 8))
-            ab = array.array("B", [0] * ((0x3f + 7) // 8))
-            try:
-                fcntl.ioctl(fd, 0x80084520 | (len(kb) << 16), kb)  # EVIOCGBIT(EV_KEY)
-            except Exception:
-                pass
-            try:
-                fcntl.ioctl(fd, 0x80084503 | (len(ab) << 16), ab)  # EVIOCGBIT(EV_ABS)
-            except Exception:
-                pass
-            def bit(arr, code):
-                return code // 8 < len(arr) and (arr[code // 8] >> (code % 8)) & 1
-            return bit(kb, BTN_SOUTH) or bit(ab, ABS_HAT0X)
+            def ioc(d, t, nr, sz):
+                return (d << 30) | (sz << 16) | (ord(t) << 8) | nr
+            def bits(ev, n):
+                import array
+                a = array.array("B", [0] * ((n + 7) // 8))
+                fcntl.ioctl(fd, ioc(2, "E", 0x20 + ev, len(a)), a)
+                return a
+            def bit(a, c):
+                return c // 8 < len(a) and (a[c // 8] >> (c % 8)) & 1
+            kb = bits(1, 0x300)      # EV_KEY
+            ab = bits(3, 0x40)       # EV_ABS
+            return bit(kb, 0x130) or bit(kb, 0x220) or bit(ab, 0x10)
         except Exception:
             return False
         finally:
