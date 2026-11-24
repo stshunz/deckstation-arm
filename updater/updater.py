@@ -81,27 +81,23 @@ pygame.joystick.init()
 # ---------------------------------------------------------------------------
 def _evdev_bridge_start():
     import fcntl, glob, os, select, struct, threading
-    EVIOCGRAB = 0x40044590
     EV_KEY, EV_ABS = 1, 3
-    EV_SYN = 0
     BTN_SOUTH, BTN_EAST, BTN_NORTH, BTN_WEST = 0x130, 0x131, 0x133, 0x134
-    BTN_DPAD = {0x220: 11, 0x221: 12, 0x222: 13, 0x223: 14}  # up,down,left,right -> botones 11..14
+    BTN_DPAD = {0x220: 11, 0x221: 12, 0x222: 13, 0x223: 14}  # up,down,left,right -> 11..14
     ABS_HAT0X, ABS_HAT0Y = 0x10, 0x11
     FMT = "llHHi"
     SZ = struct.calcsize(FMT)
 
-    def can_grab(path):
+    def ioc(d, t, nr, sz):
+        return (d << 30) | (sz << 16) | (ord(t) << 8) | nr
+
+    EVIOCGRAB = ioc(1, "E", 0x90, 4)
+
+    def log(txt):
         try:
-            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+            open("/tmp/updater-evdev.log", "a").write(txt + "\n")
         except OSError:
-            return None
-        try:
-            fcntl.ioctl(fd, EVIOCGRAB, 1)
-            fcntl.ioctl(fd, EVIOCGRAB, 0)
-            return fd          # libre
-        except OSError:
-            os.close(fd)
-            return False       # capturado por otro
+            pass
 
     def is_pad(path):
         try:
@@ -109,49 +105,65 @@ def _evdev_bridge_start():
         except OSError:
             return False
         try:
-            def ioc(d, t, nr, sz):
-                return (d << 30) | (sz << 16) | (ord(t) << 8) | nr
+            import array
             def bits(ev, n):
-                import array
                 a = array.array("B", [0] * ((n + 7) // 8))
                 fcntl.ioctl(fd, ioc(2, "E", 0x20 + ev, len(a)), a)
                 return a
             def bit(a, c):
                 return c // 8 < len(a) and (a[c // 8] >> (c % 8)) & 1
-            kb = bits(1, 0x300)      # EV_KEY
-            ab = bits(3, 0x40)       # EV_ABS
-            return bit(kb, 0x130) or bit(kb, 0x220) or bit(ab, 0x10)
+            kb = bits(1, 0x300)
+            ab = bits(3, 0x40)
+            return bit(kb, BTN_SOUTH) or bit(kb, 0x220) or bit(ab, ABS_HAT0X)
         except Exception:
             return False
         finally:
             os.close(fd)
 
-    def scan():
+    def is_free(path):
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+        except OSError:
+            return False
+        try:
+            fcntl.ioctl(fd, EVIOCGRAB, 1)
+            fcntl.ioctl(fd, EVIOCGRAB, 0)
+            return True
+        except OSError:
+            return False
+        finally:
+            os.close(fd)
+
+    def name_of(path):
+        try:
+            return open("/sys/class/input/%s/device/name" % os.path.basename(path)).read().strip()
+        except OSError:
+            return path
+
+    def pick():
+        best = None
         for path in sorted(glob.glob("/dev/input/event*")):
-            if not is_pad(path):
+            if not is_pad(path) or not is_free(path):
                 continue
-            fd = can_grab(path)
-            if fd:                       # libre: nos vale
-                try:
-                    name = open("/sys/class/input/%s/device/name" % os.path.basename(path)).read().strip()
-                except OSError:
-                    name = path
-                print("evdev: usando %s (%s)" % (path, name), flush=True)
-                try:
-                    open("/tmp/updater-evdev.log", "a").write("usando %s (%s)\n" % (path, name))
-                except OSError:
-                    pass
-                return fd
-        return None
+            n = name_of(path).lower()
+            rank = 0 if "x-box" in n else (1 if "odin" in n else 2)
+            if best is None or rank < best[0]:
+                best = (rank, path)
+        return best[1] if best else None
 
     def run():
         fd = None
         buf = b""
         while True:
             if fd is None:
-                fd = scan()
-                if fd is None:
+                path = pick()
+                if not path:
                     import time; time.sleep(2); continue
+                try:
+                    fd = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+                except OSError:
+                    import time; time.sleep(1); continue
+                log("usando %s (%s)" % (path, name_of(path)))
             r, _, _ = select.select([fd], [], [], 1.0)
             if not r:
                 continue
@@ -164,31 +176,25 @@ def _evdev_bridge_start():
                 ev = buf[:SZ]; buf = buf[SZ:]
                 _, _, typ, code, val = struct.unpack(FMT, ev)
                 if typ == EV_KEY and val == 1:
-                    try:
-                        open("/tmp/updater-evdev.log", "a").write("KEY code=%#x val=%d\n" % (code, val))
-                    except OSError:
-                        pass
+                    log("KEY %#x" % code)
                     if code in (BTN_SOUTH, BTN_EAST, BTN_NORTH, BTN_WEST):
                         idx = {BTN_SOUTH: 0, BTN_EAST: 1, BTN_NORTH: 3, BTN_WEST: 2}[code]
                         pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": idx}))
                     elif code in BTN_DPAD:
                         pygame.event.post(pygame.event.Event(pygame.JOYBUTTONDOWN, {"joy": 0, "button": BTN_DPAD[code]}))
                 elif typ == EV_ABS and code in (ABS_HAT0X, ABS_HAT0Y):
-                    try:
-                        open("/tmp/updater-evdev.log", "a").write("ABS code=%#x val=%d\n" % (code, val))
-                    except OSError:
-                        pass
+                    log("ABS %#x %d" % (code, val))
                     hx = val if code == ABS_HAT0X else 0
                     hy = val if code == ABS_HAT0Y else 0
                     pygame.event.post(pygame.event.Event(pygame.JOYHATMOTION, {"joy": 0, "hat": 0, "value": (hx, -hy)}))
 
-    # Solo si el primer gamepad esta capturado (Steam Input): si esta libre, pygame lee solo.
-    for path in sorted(glob.glob("/dev/input/event*")):
-        if not is_pad(path):
-            continue
-        if can_grab(path) is False:      # capturado -> hace falta el puente
-            threading.Thread(target=run, daemon=True).start()
-        return
+    # Arrancar SOLO si algun pad esta capturado (Steam/InputPlumber). Antes se miraba
+    # unicamente el primer pad y se salia sin arrancar nunca.
+    pads = [p for p in sorted(glob.glob("/dev/input/event*")) if is_pad(p)]
+    captured = [p for p in pads if not is_free(p)]
+    log("pads=%s capturados=%s" % (pads, captured))
+    if captured:
+        threading.Thread(target=run, daemon=True).start()
 
 
 try:
