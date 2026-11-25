@@ -103,7 +103,13 @@ else
     # Con el helper del sistema (regla polkit) no hace falta dialogo de contrasena en
     # Game Mode; si no esta, se cae a pacman como antes.
     if [ -x /usr/bin/pocknix-cores-update ]; then
-        ELEVAR_CMD=(elevar /usr/bin/pocknix-cores-update "${CORES_PKG}")
+        # pkexec SIEMPRE para el helper: la regla polkit autoriza a wheel y no necesita
+        # display. El Updater corre sin DISPLAY, asi que elegir pkexec por DISPLAY fallaba.
+        if [ "$(id -u)" = 0 ]; then
+            ELEVAR_CMD=(/usr/bin/pocknix-cores-update "${CORES_PKG}")
+        else
+            ELEVAR_CMD=(pkexec /usr/bin/pocknix-cores-update "${CORES_PKG}")
+        fi
         for _p in ${CORES_EXTRA}; do ELEVAR_CMD+=("${_p}"); done
         set -- "${ELEVAR_CMD[@]}"
         if "$@"; then
